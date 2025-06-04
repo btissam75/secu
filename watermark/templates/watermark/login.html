@@ -1,0 +1,325 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Connexion - SecureWaterMark</title>
+  <!-- Bootstrap pour la mise en forme des inputs et boutons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <!-- FontAwesome CSS pour les icônes Facebook et Twitter -->
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- ==========================
+       CSS INTÉGRÉ : Deux colonnes (Connexion + Dégradé)
+       ========================== -->
+  <style>
+    /* 1) Forcer html et body à 100 % de la hauteur de la fenêtre */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 2) Section enveloppante en flex pour centrer le card */
+    .login-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #eee;
+    }
+
+    /* 3) Card principal : 90 % largeur, 100 % hauteur de la section */
+    .login-card {
+      width: 90%;
+      max-width: 1000px;
+      height: 100%; /* remplissage total de la hauteur de .login-section */
+      display: flex;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      background-color: #ffffff;
+    }
+
+    /* 4) Deux colonnes EXACTEMENT identiques en largeur et en hauteur */
+    .col-left,
+    .col-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* 5) Colonne de gauche : formulaire de connexion + boutons sociaux */
+    .col-left {
+      padding: 2rem 2.5rem;
+    }
+    .col-left .logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .col-left .logo img {
+      width: 185px;
+    }
+    .col-left .logo h4 {
+      margin-top: 1rem;
+      font-weight: 500;
+      font-size: 1.5rem;
+    }
+    .col-left form p {
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    .col-left .form-outline {
+      margin-bottom: 1.5rem;
+    }
+    .col-left .form-control {
+      border-radius: 0.25rem;
+      transition: all 0.3s ease;
+    }
+    .col-left .form-control:focus {
+      box-shadow: 0 0 5px rgba(13, 110, 253, 0.3);
+      border-color: #0d6efd;
+    }
+    .col-left .btn-gradient {
+      background: linear-gradient(
+        90deg,
+        #ee7724,
+        #d8363a,
+        #dd3675,
+        #b44593
+      );
+      border: none;
+      color: #fff;
+      transition: opacity 0.3s ease;
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border-radius: 0.375rem;
+    }
+    .col-left .btn-gradient:hover {
+      opacity: 0.85;
+    }
+    .col-left .text-link {
+      color: #0d6efd;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-left: 0.5rem;
+    }
+    .col-left .text-link:hover {
+      text-decoration: underline;
+    }
+    .col-left .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 1.5rem 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    .col-left .divider::before,
+    .col-left .divider::after {
+      content: "";
+      flex: 1;
+      border-bottom: 1px solid #ccc;
+    }
+    .col-left .divider:not(:empty)::before {
+      margin-right: .5em;
+    }
+    .col-left .divider:not(:empty)::after {
+      margin-left: .5em;
+    }
+    .col-left .social-buttons .btn {
+      width: 100%;
+      margin-bottom: 0.75rem;
+      font-weight: bold;
+    }
+    .col-left .social-buttons .btn i {
+      margin-right: 0.5rem;
+    }
+    .col-left .register-link {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+    .col-left .register-link .btn-outline-danger {
+      border-radius: 0.375rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      margin-left: 0.5rem;
+    }
+
+    /* 6) Colonne de droite : dégradé orange→rose */
+    .col-right {
+      background: #fccb90; /* fallback */
+      background: -webkit-linear-gradient(
+        to right,
+        #ee7724,
+        #d8363a,
+        #dd3675,
+        #b44593
+      );
+      background: linear-gradient(
+        to right,
+        #ee7724,
+        #d8363a,
+        #dd3675,
+        #b44593
+      );
+      color: white;
+      padding: 2rem;
+    }
+    @media (min-width: 769px) {
+      .col-right {
+        border-top-right-radius: 0.75rem;
+        border-bottom-right-radius: 0.75rem;
+      }
+    }
+    .col-right .inner-content {
+      max-width: 80%;
+      margin: 0 auto;
+      text-align: left;
+    }
+    .col-right .inner-content h4 {
+      font-weight: bold;
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .col-right .inner-content p {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    .col-right .inner-content .btn-light {
+      background-color: rgba(255, 255, 255, 0.85);
+      color: #ee7724;
+      border: none;
+      font-weight: bold;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.375rem;
+      transition: background-color 0.3s ease;
+    }
+    .col-right .inner-content .btn-light:hover {
+      background-color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===========
+       SECTION PRINCIPALE 
+       ===========
+  -->
+  <section class="login-section">
+    <div class="login-card">
+      <!-- ===========
+           COLONNE GAUCHE (FORMULAIRE + BOUTONS SOCIAUX)
+           ===========
+      -->
+      <div class="col-left">
+        <div class="logo">
+          <img
+            src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/lotus.webp"
+            alt="logo"
+          />
+          <h4>SecureWaterMark</h4>
+        </div>
+
+        <form method="POST">
+          {% csrf_token %}
+          <p>Please login to your account</p>
+
+          <div class="form-outline">
+            <label class="form-label" for="usernameInput">Username</label>
+            <input
+              type="text"
+              id="usernameInput"
+              name="username"
+              class="form-control"
+              placeholder="Nom d’utilisateur ou Email"
+              required
+            />
+          </div>
+
+          <div class="form-outline">
+            <label class="form-label" for="passwordInput">Password</label>
+            <input
+              type="password"
+              id="passwordInput"
+              name="password"
+              class="form-control"
+              placeholder="Mot de passe"
+              required
+            />
+          </div>
+
+          <div class="mb-3 d-flex align-items-center">
+            <button type="submit" class="btn btn-gradient me-3">
+              Log in
+            </button>
+            <a class="text-link" href="{% url 'password_reset' %}">Forgot password?</a>
+          </div>
+        </form>
+
+        <!-- Séparateur "OR" -->
+        <div class="divider">OR</div>
+
+        <!-- Boutons sociaux avec URL et icônes -->
+        <div class="social-buttons">
+          <a
+            class="btn btn-primary"
+            style="background-color: #3b5998;"
+            href="https://www.facebook.com"
+            target="_blank"
+            role="button"
+          >
+            <i class="fab fa-facebook-f"></i>Continue with Facebook
+          </a>
+          <a
+            class="btn btn-info"
+            style="background-color: #55acee;"
+            href="https://www.twitter.com"
+            target="_blank"
+            role="button"
+          >
+            <i class="fab fa-twitter"></i>Continue with Twitter
+          </a>
+        </div>
+
+        <div class="register-link">
+          <span>Don't have an account?</span>
+          <a
+            href="{% url 'register' %}"
+            class="btn btn-outline-danger ms-2"
+          >
+            Sign up
+          </a>
+        </div>
+      </div>
+
+      <!-- ===========
+           COLONNE DROITE (DÉGRADÉ ORANGE→ROSE + CONTENU)
+           ===========
+      -->
+      <div class="col-right">
+        <div class="inner-content">
+          <h4>Discover the hidden gems of the world, one step at a time.</h4>
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
+            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+            aliquip ex ea commodo consequat.
+          </p>
+         
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

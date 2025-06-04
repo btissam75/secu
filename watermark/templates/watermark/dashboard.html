@@ -1,0 +1,286 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Tableau de bord - SecureWaterMark</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --gradient: linear-gradient(90deg, #ee7724, #d8363a, #dd3675, #b44593);
+      --light-bg: #f8f9fa;
+      --dark-bg: #212529;
+      --light-text: #343a40;
+      --dark-text: #f8f9fa;
+    }
+    html, body {
+      height: 100%; margin: 0; padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      transition: background-color 0.5s, color 0.5s;
+    }
+    .header {
+      background-color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      font-size: 1.4rem;
+      font-weight: bold;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .sidebar {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      width: 220px;
+      height: calc(100vh - 56px);
+      background: var(--gradient);
+      color: white;
+      padding-top: 1rem;
+      transition: background-color 0.5s;
+    }
+    .sidebar a {
+      display: block;
+      padding: 0.75rem 1.25rem;
+      color: white;
+      text-decoration: none;
+    }
+    .sidebar a:hover, .sidebar a.active {
+      background-color: rgba(255,255,255,0.1);
+    }
+    .content {
+      margin-left: 220px;
+      padding: 2rem;
+      background-color: var(--light-bg);
+      color: var(--light-text);
+      min-height: calc(100vh - 56px);
+      transition: background-color 0.5s, color 0.5s;
+    }
+    .dark-mode .content {
+      background-color: var(--dark-bg);
+      color: var(--dark-text);
+    }
+    .card-indicator {
+      padding: 1rem;
+      color: white;
+      border-radius: 0.5rem;
+    }
+    .indicator-blue   { background: #0d6efd; }
+    .indicator-green  { background: #198754; }
+    .indicator-orange { background: #fd7e14; }
+    .indicator-red    { background: #dc3545; }
+    .profile-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 0.5rem;
+    }
+    .dropdown-toggle {
+      display: flex;
+      align-items: center;
+      color: #343a40;
+    }
+    /* Thèmes globaux */
+body.light-mode {
+  background: linear-gradient(90deg, #ee7724, #d8363a, #dd3675, #b44593);
+  color: #000;
+}
+body.dark-mode {
+  background-color: #121212;
+  color: #f5f5f5;
+}
+
+/* Transitions douces */
+.content, .sidebar, .header, .recent-table {
+  transition: all 0.4s ease;
+}
+
+/* Composants personnalisés */
+.sidebar.dark-mode {
+  background-color: #1f1f1f;
+}
+.header.dark-mode {
+  background-color: #222;
+}
+.recent-table.dark-mode {
+  background-color: #1e1e1e;
+}
+
+    .recent-table {
+      background: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .dark-mode .recent-table {
+      background: #343a40;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">SecureWaterMark</div>
+    <div class="dropdown">
+      <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <img src="{% static 'img/marie.png' %}" alt="Marie" class="profile-img">
+        {{ request.user.username }}
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href={% url 'profile' %}>Mon profil</a></li>
+        <li><a class="dropdown-item" href="#">Paramètres</a></li>
+       <li><a class="btn btn-sm btn-outline-dark ms-3" href="#" id="themeToggle">🎨 Mode Sombre</a></li> 
+        
+
+        <li><a class="dropdown-item" href="{% url 'logout' %}">Se déconnecter</a></li>
+       
+      </ul>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <a href="#" class="active"><i class="fas fa-home me-2"></i> Tableau de bord</a>
+    <a href="#"><i class="fas fa-lock me-2"></i> Protéger</a>
+    <a href="#"><i class="fas fa-unlock me-2"></i> Déchiffrer</a>
+    <a href="#"><i class="fas fa-folder me-2"></i> Mes documents</a>
+    <a href="#"><i class="fas fa-history me-2"></i> Historique</a>
+    <a href={% url 'settings' %}><i class="fas fa-cog me-2"></i> Paramètres</a>
+    <a href="{% url 'help' %}"><i class="fas fa-question-circle me-2"></i> Aide</a>
+    <a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Se déconnecter
+ Se déconnecter</a>
+  </div>
+
+  <!-- CONTENU -->
+  <div class="content">
+    <h3>Bienvenue, {{ request.user.get_full_name|default:request.user.username }}</h3>
+
+    <div class="row g-4 my-4">
+      <div class="col-md-3"><div class="card-indicator indicator-blue">12 Documents</div></div>
+      <div class="col-md-3"><div class="card-indicator indicator-orange">3 En attente</div></div>
+      <div class="col-md-3"><div class="card-indicator indicator-red">1 Échec</div></div>
+      <div class="col-md-3"><div class="card-indicator indicator-green">Dernier : contrat.pdf</div></div>
+    </div>
+    <div class="d-flex gap-3 mb-4">
+      <a href="#" class="btn btn-primary btn-lg"><i class="fas fa-plus me-2"></i>Protéger</a>
+      <a href="#" class="btn btn-success btn-lg"><i class="fas fa-search me-2"></i>Déchiffrer</a>
+      
+      
+    </div>
+    <div class="recent-table">
+      <h4>Derniers documents</h4>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Titre</th><th>Statut</th><th>Date</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>contrat_A.pdf</td><td><span class="badge bg-success">OK</span></td><td>04/06/2025</td><td><a href="#" class="btn btn-sm btn-primary">Voir</a></td></tr>
+          <tr><td>nda_b.pdf</td><td><span class="badge bg-warning">Attente</span></td><td>03/06/2025</td><td><a href="#" class="btn btn-sm btn-secondary">Détails</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // JS dynamique pour texte d'accueil
+    document.addEventListener('DOMContentLoaded', () => {
+      const heure = new Date().getHours();
+      let message = "Bonjour";
+      if (heure >= 12 && heure < 18) message = "Bon après-midi";
+      else if (heure >= 18 || heure < 6) message = "Bonsoir";
+      document.querySelector('h3').innerText = `${message}, {{ request.user.first_name }}`;
+    });
+
+    // Toggle mode sombre / clair
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+    });
+    
+  document.addEventListener('DOMContentLoaded', function () {
+    const heure = new Date().getHours();
+    let message = "Bonjour";
+    if (heure >= 12 && heure < 18) message = "Bon après-midi";
+    else if (heure >= 18 || heure < 6) message = "Bonsoir";
+
+    // Nom d’utilisateur dynamique injecté via Django
+    const user = "{{ request.user.first_name|default:request.user.username }}";
+    document.querySelector('h3').innerHTML = `${message}, ${user}`;
+  });
+
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const body = document.body;
+    const toggleBtn = document.getElementById('themeToggle');
+    const elementsToToggle = document.querySelectorAll('.sidebar, .header, .recent-table');
+
+    function applyTheme(theme) {
+      body.classList.remove('light-mode', 'dark-mode');
+      body.classList.add(`${theme}-mode`);
+
+      elementsToToggle.forEach(el => {
+        el.classList.remove('light-mode', 'dark-mode');
+        el.classList.add(`${theme}-mode`);
+      });
+
+      toggleBtn.textContent = theme === 'dark' ? '☀️ Mode clair' : '🌗 Mode sombre';
+      localStorage.setItem('theme', theme);
+    }
+
+    // Charger le thème depuis le stockage local
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(savedTheme);
+
+    // Écouteur sur le bouton
+    toggleBtn.addEventListener('click', function () {
+      const newTheme = body.classList.contains('dark-mode') ? 'light' : 'dark';
+      applyTheme(newTheme);
+    });
+  });
+</script>
+<script>
+ 
+  document.addEventListener('DOMContentLoaded', () => {
+    const body = document.body;
+    const toggleBtn = document.getElementById('themeToggle');
+
+    // 1. Charger thème stocké
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    body.classList.add(`${savedTheme}-mode`);
+    document.querySelectorAll('.sidebar, .header, .recent-table').forEach(el => {
+      el.classList.add(`${savedTheme}-mode`);
+    });
+    toggleBtn.innerText = savedTheme === 'dark' ? '☀️ Mode clair' : '🌗 Mode sombre';
+
+    // 2. Switch thème
+    toggleBtn.addEventListener('click', () => {
+      const currentTheme = body.classList.contains('dark-mode') ? 'dark' : 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      body.classList.remove(`${currentTheme}-mode`);
+      body.classList.add(`${newTheme}-mode`);
+      document.querySelectorAll('.sidebar, .header, .recent-table').forEach(el => {
+        el.classList.remove(`${currentTheme}-mode`);
+        el.classList.add(`${newTheme}-mode`);
+      });
+      toggleBtn.innerText = newTheme === 'dark' ? '☀️ Mode clair' : '🌗 Mode sombre';
+      localStorage.setItem('theme', newTheme);
+    });
+  });
+
+
+</script>
+
+  
+</body>
+</html>

@@ -1,0 +1,16 @@
+{% extends 'watermark/base.html' %}
+{% block title %}Charger un document{% endblock %}
+
+
+{% block content %}
+<h1>📥 Charger un document</h1>
+<p>Choisissez un fichier PDF ou image à télécharger :</p>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-group mb-3">
+        <input type="file" name="document" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Charger</button>
+</form>
+{% endblock %}

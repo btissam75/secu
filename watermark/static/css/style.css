@@ -1,0 +1,104 @@
+/* ==============================
+   1) Section “gradient-form” pleine hauteur
+   ============================== */
+.gradient-form {
+  background-color: #eee;
+}
+
+/* À partir de 768px de large, on force la section à 100vh */
+@media (min-width: 768px) {
+  .gradient-form {
+    height: 100vh !important;
+  }
+}
+
+/* ==============================
+   2) Dégradé orange→rose (colonne droite)
+   ============================== */
+.gradient-custom-2 {
+  /* fallback */
+  background: #fccb90;
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: -webkit-linear-gradient(
+    to right,
+    #ee7724,
+    #d8363a,
+    #dd3675,
+    #b44593
+  );
+  /* W3C, IE10+, Edge, Firefox16+, Chrome26+, Opera12+, Safari7+ */
+  background: linear-gradient(
+    to right,
+    #ee7724,
+    #d8363a,
+    #dd3675,
+    #b44593
+  );
+  color: white;   /* Texte en blanc sur le dégradé */
+  height: 100%;   /* Remplit 100 % de la hauteur de son parent (row.h-100) */
+  display: flex;
+  align-items: center;    /* Centrage vertical automatique */
+  justify-content: center;/* Centrage horizontal éventuel */
+  text-align: left;
+}
+
+/* Coins arrondis à droite pour la colonne dégradée */
+@media (min-width: 769px) {
+  .gradient-custom-2 {
+    border-top-right-radius: 0.3rem;
+    border-bottom-right-radius: 0.3rem;
+  }
+}
+
+/* Style du h4 à l’intérieur de .gradient-custom-2 */
+.gradient-custom-2 h4 {
+  font-weight: bold;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Style du paragraphe dans .gradient-custom-2 */
+.gradient-custom-2 p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ==============================
+   3) (OPTIONNEL) Bouton “Log in” en dégradé identique
+   ============================== */
+.btn.gradient-custom-2 {
+  background: linear-gradient(
+    90deg,
+    #ee7724,
+    #d8363a,
+    #dd3675,
+    #b44593
+  );
+  border: none;
+  color: #fff;
+  transition: opacity 0.3s ease;
+}
+.btn.gradient-custom-2:hover {
+  opacity: 0.85;
+}
+
+/* ==============================
+   4) Styles généraux (bootstrap + légers ajustements)
+   ============================== */
+body {
+  background: linear-gradient(to right, #f0f4ff, #ffffff);
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+.card {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+.form-control {
+  border-radius: 0.25rem;
+  transition: all 0.3s ease;
+}
+.form-control:focus {
+  box-shadow: 0 0 5px rgba(13, 110, 253, 0.3);
+  border-color: #0d6efd;
+}

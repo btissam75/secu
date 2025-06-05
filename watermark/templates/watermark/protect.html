@@ -1,0 +1,120 @@
+{# templates/watermark/protect.html #}
+{% extends "watermark/base.html" %}
+{% load static %}
+
+{% block title %}Protéger un PDF dans une image{% endblock %}
+
+{% block content %}
+  <div class="px-4 py-4">
+    <h3 class="mb-3">Protéger un PDF dans une image</h3>
+
+    {# Affiche les messages d’alerte (success / error) #}
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="alert {% if msg.tags %}alert-{{ msg.tags }}{% else %}alert-info{% endif %}" role="alert">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {# ———————— Formulaire de protection PDF ———————— #}
+    <form method="POST" enctype="multipart/form-data" class="mb-5">
+      {% csrf_token %}
+      <input type="hidden" name="mode" value="pdf">
+
+      <div class="mb-3">
+        <label for="title" class="form-label">Titre (facultatif)</label>
+        <input
+          type="text"
+          class="form-control"
+          id="title"
+          name="title"
+          placeholder="Ex : MonContratSecret.pdf"
+        >
+      </div>
+
+      <div class="mb-3">
+        <label for="uploaded_pdf" class="form-label">
+          Sélectionnez le PDF à protéger <span class="text-danger">*</span>
+        </label>
+        <input
+          type="file"
+          class="form-control"
+          id="uploaded_pdf"
+          name="uploaded_pdf"
+          accept="application/pdf"
+          required
+        >
+      </div>
+
+      <div class="mb-3">
+        <label for="cover_image" class="form-label">
+          Image porteuse (PNG ou JPG) <small class="text-muted">(optionnel)</small>
+        </label>
+        <input
+          type="file"
+          class="form-control"
+          id="cover_image"
+          name="cover_image"
+          accept="image/png, image/jpeg"
+        >
+        <div class="form-text">
+          Si vous ne fournissez pas d’image, <code>media/default_carrier.png</code> sera utilisée.
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-shield-alt me-2"></i>Protéger le PDF
+      </button>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary ms-2">
+        ← Retour au tableau de bord
+      </a>
+    </form>
+
+    {# ———————— Liste des images stéganographiées ———————— #}
+    <h4 class="mb-3">Mes images chiffrées (stégo)</h4>
+    {% if stego_list %}
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Aperçu</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sf in stego_list %}
+              <tr>
+                <td>{{ sf.name }}</td>
+                <td>
+                  <a href="{{ sf.file.url }}" target="_blank">
+                    <img src="{{ sf.file.url }}" alt="aperçu stégo" width="80" class="img-thumbnail">
+                  </a>
+                </td>
+                <td>{{ sf.created_at|date:"d/m/Y H:i" }}</td>
+                <td>
+                  <a href="{{ sf.file.url }}" class="btn btn-sm btn-primary me-1" target="_blank" title="Voir l’image">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a href="{% url 'decrypt' sf.id %}" class="btn btn-sm btn-success me-1" title="Télécharger le PDF déchiffré">
+                    <i class="fas fa-download"></i>
+                  </a>
+                  <a href="{% url 'delete_stego' sf.id %}"
+                     class="btn btn-sm btn-danger"
+                     onclick="return confirm('Supprimer cette image stégo ?');"
+                     title="Supprimer">
+                    <i class="fas fa-trash-alt"></i>
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted">Vous n’avez pas encore d’images stéganographiées.</p>
+    {% endif %}
+  </div>
+{% endblock %}

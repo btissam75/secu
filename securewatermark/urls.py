@@ -57,6 +57,9 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('upload/', views.upload_document, name='upload'),
+    path('admin/', admin.site.urls),
+    path('accounts/', include('allauth.urls')),
+    path('', include('watermark.urls')),
 ]
 
 if settings.DEBUG:

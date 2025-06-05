@@ -1,0 +1,50 @@
+{% extends "watermark/base.html" %}
+{% load static %}
+
+{% block title %}Mes PDF déchiffrés{% endblock %}
+
+{% block content %}
+  <div class="container py-4">
+    <h2 class="mb-4">Mes PDF déjà déchiffrés</h2>
+
+    {% if decrypted_docs %}
+      <div class="row g-4">
+        {% for doc in decrypted_docs %}
+          <div class="col-md-4">
+            <div class="card h-100">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ doc.name }}</h5>
+                <p class="card-text">
+                  <small class="text-muted">
+                    Déchiffré le {{ doc.decrypted_at|date:"d/m/Y H:i" }}
+                  </small>
+                </p>
+                <div class="mt-auto d-flex justify-content-between">
+                  <a href="{{ doc.file.url }}" 
+                     class="btn btn-sm btn-primary" 
+                     target="_blank">
+                    <i class="fas fa-file-pdf me-1"></i>Télécharger
+                  </a>
+                  <!-- Ici, on appelle bien le nom “delete_decrypted” qui doit exister en urls.py -->
+                  {% comment %} <a href="{% url 'delete_decrypted'  %}"
+                     class="btn btn-sm btn-outline-danger"
+                     onclick="return confirm('Supprimer ce PDF déchiffré ?');">
+                    <i class="fas fa-trash-alt me-1"></i>Supprimer
+                  </a> {% endcomment %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="alert alert-secondary">
+        Vous n’avez pas encore déchiffré de PDF.
+      </div>
+    {% endif %}
+
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary mt-4">
+      ← Retour au tableau de bord
+    </a>
+  </div>
+{% endblock %}

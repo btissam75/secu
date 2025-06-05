@@ -3,7 +3,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>{% block title %}SecureWaterMark{% endblock %}</title>
+  <title>Paramètres - SecureWaterMark</title>
 
   <!-- Bootstrap & FontAwesome -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,8 +13,9 @@
     /* ============== Variables CSS ============== */
     :root {
       --gradient: linear-gradient(90deg, #ee7724, #d8363a, #dd3675, #b44593);
-      --light-bg: #ffffff;
+      --light-bg: #ffffff; 
       --light-text: #343a40;
+      --sidebar-bg: #ee7724;
       --dark-bg: #212529;
       --dark-text: #f8f9fa;
       --transition-speed: 0.4s;
@@ -44,6 +45,9 @@
       z-index: 1000;
       transition: background-color var(--transition-speed);
     }
+    .header.dark-mode {
+      background-color: var(--dark-bg);
+    }
     .logo {
       font-size: 1.4rem;
       font-weight: bold;
@@ -51,14 +55,11 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    .header.dark-mode {
-      background-color: var(--dark-bg);
-    }
 
     /* ============== SIDEBAR ============== */
     .sidebar {
       position: fixed;
-      top: 56px; /* Hauteur du header */
+      top: 56px; /* hauteur du header */
       left: 0;
       width: 220px;
       height: calc(100vh - 56px);
@@ -69,7 +70,7 @@
       transition: width var(--transition-speed), background-color var(--transition-speed);
     }
     .sidebar.collapsed {
-      width: 60px; /* Réduit la sidebar */
+      width: 60px; /* rétrécit la sidebar */
     }
     .sidebar a {
       display: block;
@@ -89,11 +90,11 @@
     .sidebar.dark-mode {
       background-color: #1f1f1f;
     }
-    /* Masquer le texte quand la sidebar est réduite */
+    /* masque le texte quand la sidebar est réduite */
     .sidebar.collapsed a span {
       display: none;
     }
-    /* Bouton pour réduire/agrandir la sidebar */
+    /* bouton pour réduire/agrandir la sidebar */
     .toggle-sidebar-btn {
       position: absolute;
       bottom: 1rem;
@@ -117,15 +118,14 @@
 
     /* ============== CONTENU PRINCIPAL ============== */
     .content {
-      margin-top: 56px; /* Hauteur du header */
-      margin-left: 220px; /* Largeur de la sidebar */
+      margin-top: 56px; /* hauteur du header */
+      margin-left: 220px; /* largeur de la sidebar */
       padding: 2rem;
       background-color: var(--light-bg);
       color: var(--light-text);
       min-height: calc(100vh - 56px);
       transition: margin-left var(--transition-speed), background-color var(--transition-speed), color var(--transition-speed);
     }
-    /* Quand la sidebar est réduite, on décale moins le contenu */
     .sidebar.collapsed ~ .content {
       margin-left: 60px;
     }
@@ -143,9 +143,9 @@
       font-weight: bold;
     }
     .indicator-blue   { background: #0d6efd; }
-    .indicator-green  { background: #198754; }
     .indicator-orange { background: #fd7e14; }
     .indicator-red    { background: #dc3545; }
+    .indicator-green  { background: #198754; }
 
     /* ============== PROFIL IMAGE ============== */
     .profile-img {
@@ -156,36 +156,50 @@
       margin-right: 0.5rem;
     }
 
-    /* ============== TABLEORDANNEE (exemple « Derniers documents ») ============== */
-    .recent-table {
+    /* ============== FORMULAIRES ============== */
+    .settings-section {
       background: #ffffff;
-      padding: 1rem;
+      padding: 1.5rem;
       border-radius: 0.5rem;
       box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      margin-top: 2rem;
+      margin-bottom: 2rem;
       transition: background-color var(--transition-speed), color var(--transition-speed);
     }
-    .recent-table.dark-mode {
-      background: #343a40;
+    .settings-section.dark-mode {
+      background: #2e2e2e;
+      color: #f1f1f1;
+    }
+    .settings-section h4 {
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 0.5rem;
+    }
+    .settings-section.dark-mode h4 {
+      border-color: #555;
+    }
+    .form-control, .form-check-input {
+      transition: background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
+    }
+    .form-control.dark-mode {
+      background-color: #3a3a3a;
+      border-color: #555;
+      color: #f1f1f1;
+    }
+    .form-check-label.dark-mode {
+      color: #f1f1f1;
+    }
+    .btn-save {
+      background: var(--gradient);
+      border: none;
       color: white;
     }
-
-    /* ============== TRANSITIONS ============== */
-    .content, .sidebar, .header, .recent-table {
-      transition: all var(--transition-speed) ease;
-    }
-
-    /* ============== BOUTON MODE SOMBRE/CLAIR ============== */
-    #themeToggle {
-      background: none;
-      border: none;
-      color: inherit;
-      font-size: 1rem;
-      cursor: pointer;
+    .btn-save:hover {
+      opacity: 0.9;
     }
   </style>
 </head>
-<!-- =================== HEADER =================== -->
+
+<<!-- =================== HEADER =================== -->
   <div class="header">
     <div class="logo">SecureWaterMark</div>
     <div class="dropdown">
@@ -219,11 +233,10 @@
   </div>
 
   <!-- =================== SIDEBAR =================== -->
-  <!-- =================== SIDEBAR =================== -->
   <div class="sidebar">
-    <a href="{% url 'dashboard' %}" class="active"><i class="fas fa-home"></i><span> Tableau de bord</span></a>
-    <a href="{% url 'protect' %}"><i class="fas fa-lock"></i><span> Protéger</span></a>
-    <a href="{% url 'selected_files' %}"><i class="fas fa-unlock"></i><span> Déchiffrer</span></a>
+    <a href="#" class="active"><i class="fas fa-home"></i><span> Tableau de bord</span></a>
+    <a href="#"><i class="fas fa-lock"></i><span> Protéger</span></a>
+    <a href="#"><i class="fas fa-unlock"></i><span> Déchiffrer</span></a>
     <a href="{% url 'decrypted_list' %}" class="">
       <i class="fas fa-file-pdf"></i><span> PDF déchiffrés</span>
     </a>
@@ -238,74 +251,180 @@
     </button>
   </div>
 
-  <!-- =================== CONTENU PRINCIPAL =================== -->
   
+
+ 
 
   <!-- =================== CONTENU PRINCIPAL =================== -->
   <div class="content">
-    {% block content %}
-    {# chaque page (dashboard, protect, selected_files, decrypted_list, settings, etc.)
-        injectera son propre contenu ici #}
-    {% endblock %}
-  </div>
+    <h3>Bienvenue, {{ request.user.get_full_name|default:request.user.username }}</h3>
+
+    <!-- ========== SECTION 1 : Informations personnelles ========== -->
+    <div class="settings-section" id="personalInfoSection">
+      <h4>Informations personnelles</h4>
+      <form id="personalForm" method="POST" enctype="multipart/form-data" action="{% url 'settings' %}">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="username" class="form-label">Nom d’utilisateur</label>
+            <input type="text" class="form-control" id="username" name="username"
+                   value="{{ request.user.username }}"
+                   placeholder="Nom d’utilisateur">
+          </div>
+          <div class="col-md-6">
+            <label for="email" class="form-label">Adresse e-mail</label>
+            <input type="email" class="form-control" id="email" name="email"
+                   value="{{ request.user.email }}" placeholder="Email">
+          </div>
+          <div class="col-md-6">
+            <label for="profilePic" class="form-label">Photo de profil</label>
+            <input type="file" class="form-control" id="profilePic" name="profile_pic" accept="image/*">
+            {% load static %}
+{% static 'img/marie.png' as default_profile_img %}
+
+<img id="previewImg" class="img-thumbnail mt-2"
+     src="{{ request.user.profile.profile_pic.url|default:default_profile_img }}"
+     alt="Aperçu" width="100" height="100">
+
+          </div>
+        </div>
+        <button type="submit" class="btn btn-save mt-3">Enregistrer les modifications</button>
+      </form>
+    </div>
+
+    <!-- ========== SECTION 2 : Sécurité du compte ========== -->
+    <div class="settings-section" id="securitySection">
+      <h4>Sécurité du compte</h4>
+      <form id="securityForm" method="POST" action="{% url 'settings' %}">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="password" class="form-label">Changer le mot de passe</label>
+            <input type="password" class="form-control" id="password" name="password"
+                   placeholder="Nouveau mot de passe">
+          </div>
+          <div class="col-md-6 d-flex align-items-center">
+            <input class="form-check-input" type="checkbox" id="enable2FA" name="enable_2fa"
+                   {% if request.user.profile.two_factor_enabled %}checked{% endif %}>
+            <label class="form-check-label ms-2" for="enable2FA">Activer l’authentification 2FA</label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-save mt-3">Mettre à jour la sécurité</button>
+      </form>
+    </div>
+
+    <!-- ========== SECTION 3 : Apparence ========== -->
+    <div class="settings-section" id="appearanceSection">
+      <h4>Préférences d’affichage</h4>
+      <form id="themeForm" method="POST" action="{% url 'settings' %}">
+        {% csrf_token %}
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="darkModeToggle" name="dark_mode"
+                 {% if request.COOKIES.dark_mode == '1' %}checked{% endif %}>
+          <label class="form-check-label" for="darkModeToggle">Activer le mode sombre</label>
+        </div>
+        <button type="submit" class="btn btn-save mt-3">Enregistrer l’apparence</button>
+      </form>
+    </div>
+
+    <!-- ========== SECTION 4 : Options avancées (à la Facebook) ========== -->
+    <div class="settings-section" id="advancedOptionsSection">
+      <h4>Options avancées</h4>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <button class="btn btn-outline-secondary w-100">
+            <i class="fas fa-user-lock me-2"></i>Modifier mes autorisations
+          </button>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-outline-secondary w-100">
+            <i class="fas fa-database me-2"></i>Télécharger mes données
+          </button>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-outline-danger w-100" onclick="return confirm('Voulez-vous vraiment supprimer votre compte ?');">
+            <i class="fas fa-user-minus me-2"></i>Supprimer mon compte
+          </button>
+        </div>
+      </div>
+      <div class="mt-3">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-light">
+          <i class="fas fa-arrow-left me-1"></i>Retour au tableau de bord
+        </a>
+      </div>
+    </div>
+
+  </div>  <!-- /.content -->
 
   <!-- =================== SCRIPTS JS =================== -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Message d'accueil dynamique (Bonjour / Bon après-midi / Bonsoir)
+    // Prévisualisation de la photo de profil
+    document.getElementById('profilePic').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          document.getElementById('previewImg').src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Message d’accueil dynamique
     document.addEventListener('DOMContentLoaded', () => {
       const heure = new Date().getHours();
       let message = "Bonjour";
       if (heure >= 12 && heure < 18) message = "Bon après-midi";
       else if (heure >= 18 || heure < 6) message = "Bonsoir";
-
       const user = "{{ request.user.first_name|default:request.user.username }}";
-      // On va remplacer le contenu de la première balise <h3> qu’on trouve
-      const titre = document.querySelector('h3');
-      if (titre) titre.innerText = `${message}, ${user}`;
+      document.querySelector('h3').innerText = `${message}, ${user}`;
     });
 
-    // Toggle mode clair / mode sombre
+    // Toggle mode clair / sombre (aussi pour header/sidebar/contenu)
     document.querySelectorAll('#themeToggle').forEach(btn => {
       btn.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
-
-        // Mise à jour de l’icône et du texte
+        // Change icône & libellé
         btn.innerHTML = isDark
           ? '<i class="fas fa-sun me-2"></i>Mode clair'
           : '<i class="fas fa-moon me-2"></i>Mode sombre';
-
-        // Applique la classe sur header, sidebar, contenu « recent-table », etc.
+        // Applique la même classe dark-mode sur header, sidebar, sections
         document.querySelector('.header').classList.toggle('dark-mode', isDark);
         document.querySelector('.sidebar').classList.toggle('dark-mode', isDark);
-        document.querySelectorAll('.recent-table').forEach(el => el.classList.toggle('dark-mode', isDark));
-        document.querySelectorAll('.settings-section').forEach(el => el.classList.toggle('dark-mode', isDark));
-
-        // Sauvegarde de la préférence dans localStorage
+        document.querySelectorAll('.settings-section').forEach(sec =>
+          sec.classList.toggle('dark-mode', isDark)
+        );
+        // Sauvegarde en localStorage
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
       });
     });
 
-    // Au chargement de la page, on restaure l’état du thème depuis localStorage
+    // Au chargement, on restaure l’état du thème depuis localStorage
     window.addEventListener('DOMContentLoaded', () => {
       const savedTheme = localStorage.getItem('theme') || 'light';
       if (savedTheme === 'dark') {
         document.body.classList.add('dark-mode');
         document.querySelector('.header').classList.add('dark-mode');
         document.querySelector('.sidebar').classList.add('dark-mode');
-        document.querySelectorAll('.recent-table').forEach(el => el.classList.add('dark-mode'));
-        document.querySelectorAll('.settings-section').forEach(el => el.classList.add('dark-mode'));
-        const btn = document.querySelector('#themeToggle');
-        if (btn) btn.innerHTML = '<i class="fas fa-sun me-2"></i>Mode clair';
+        document.querySelectorAll('.settings-section').forEach(sec =>
+          sec.classList.add('dark-mode')
+        );
+        document.querySelector('#themeToggle').innerHTML = '<i class="fas fa-sun me-2"></i>Mode clair';
+      }
+      // Active la checkbox “dark_mode” si cookie = '1'
+      if ("{{ request.COOKIES.dark_mode }}" === "1") {
+        document.getElementById('darkModeToggle').checked = true;
       }
     });
 
-    // Toggle pour réduire/agrandir la sidebar
+    // Toggle réduction/agrandissement de la sidebar
     document.getElementById('toggleSidebar').addEventListener('click', () => {
       const sidebar = document.querySelector('.sidebar');
+      const content = document.querySelector('.content');
       sidebar.classList.toggle('collapsed');
-      // Changement de l’icône du bouton en fonction de l’état
+      // Change icône du bouton
       const icon = document.querySelector('#toggleSidebar i');
       if (sidebar.classList.contains('collapsed')) {
         icon.className = 'fas fa-angle-double-right';

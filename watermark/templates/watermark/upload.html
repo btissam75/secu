@@ -1,16 +1,26 @@
-{% extends 'watermark/base.html' %}
+{% extends "watermark/base.html" %}
+{% load static %}
+
 {% block title %}Charger un document{% endblock %}
 
-
 {% block content %}
-<h1>📥 Charger un document</h1>
-<p>Choisissez un fichier PDF ou image à télécharger :</p>
+  <div class="container py-4">
+    <h2>Charger un nouveau document</h2>
 
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="form-group mb-3">
-        <input type="file" name="document" class="form-control" required>
-    </div>
-    <button type="submit" class="btn btn-primary">Charger</button>
-</form>
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="alert alert-{{ msg.tags|default:'info' }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" class="mt-4">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="document" class="form-label">Sélectionnez le fichier à charger</label>
+        <input type="file" class="form-control" id="document" name="document" required>
+      </div>
+      <button type="submit" class="btn btn-success">📤 Charger le fichier</button>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary ms-2">← Retour au dashboard</a>
+    </form>
+  </div>
 {% endblock %}

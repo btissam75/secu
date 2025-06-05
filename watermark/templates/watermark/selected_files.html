@@ -1,28 +1,26 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Tableau de bord - SecureWaterMark</title>
+  <title>Mes fichiers protégés / sélectionnés — SecureWaterMark</title>
 
   <!-- Bootstrap & FontAwesome -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
   <style>
-    /* ============== Variables CSS ============== */
+    /* ======================= Variables CSS ======================= */
     :root {
       --gradient: linear-gradient(90deg, #ee7724, #d8363a, #dd3675, #b44593);
-      --light-bg: #ffffff;      /* Contenu en fond blanc pour plus de contraste */
-      --light-text: #343a40;    /* Texte foncé sur fond clair */
-      --sidebar-bg: #ee7724;    /* Couleur de base pour la sidebar s’il n’y a pas de gradient */
+      --light-bg: #ffffff;
+      --light-text: #343a40;
       --dark-bg: #212529;
       --dark-text: #f8f9fa;
       --transition-speed: 0.4s;
     }
 
-    /* ============== Reset de base ============== */
+    /* ======================= Reset de base ======================= */
     html, body {
       height: 100%;
       margin: 0;
@@ -31,7 +29,7 @@
       transition: background-color var(--transition-speed), color var(--transition-speed);
     }
 
-    /* ============== HEADER ============== */
+    /* ======================= HEADER ======================= */
     .header {
       background-color: #ffffff;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -46,6 +44,9 @@
       z-index: 1000;
       transition: background-color var(--transition-speed);
     }
+    .header.dark-mode {
+      background-color: var(--dark-bg);
+    }
     .logo {
       font-size: 1.4rem;
       font-weight: bold;
@@ -53,11 +54,21 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    .header.dark-mode {
-      background-color: var(--dark-bg);
+    .dropdown-toggle {
+      display: flex;
+      align-items: center;
+      color: inherit;
+      text-decoration: none;
+    }
+    .dropdown-toggle .profile-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 0.5rem;
     }
 
-    /* ============== SIDEBAR ============== */
+    /* ======================= SIDEBAR ======================= */
     .sidebar {
       position: fixed;
       top: 56px; /* Hauteur du header */
@@ -91,13 +102,11 @@
     .sidebar.dark-mode {
       background-color: #1f1f1f;
     }
-
-    /* Texte lien masqué quand la sidebar est réduite */
+    /* Texte du lien masqué lorsque la sidebar est réduite */
     .sidebar.collapsed a span {
       display: none;
     }
-
-    /* Icône de toggle pour réduire/agrandir la sidebar */
+    /* Bouton pour réduire/agrandir la sidebar */
     .toggle-sidebar-btn {
       position: absolute;
       bottom: 1rem;
@@ -119,7 +128,7 @@
       background-color: rgba(255,255,255,0.3);
     }
 
-    /* ============== CONTENU PRINCIPAL ============== */
+    /* ======================= CONTENU PRINCIPAL ======================= */
     .content {
       margin-top: 56px; /* Hauteur du header */
       margin-left: 220px; /* Largeur de la sidebar */
@@ -129,7 +138,7 @@
       min-height: calc(100vh - 56px);
       transition: margin-left var(--transition-speed), background-color var(--transition-speed), color var(--transition-speed);
     }
-    /* Quand la sidebar est réduite, on décale moins le contenu */
+    /* Ajustement lorsque la sidebar est réduite */
     .sidebar.collapsed ~ .content {
       margin-left: 60px;
     }
@@ -138,7 +147,7 @@
       color: var(--dark-text);
     }
 
-    /* ============== CARTES D’INDICATEURS ============== */
+    /* ======================= CARTES D’INDICATEURS ======================= */
     .card-indicator {
       padding: 1rem;
       color: white;
@@ -147,39 +156,40 @@
       font-weight: bold;
     }
     .indicator-blue   { background: #0d6efd; }
-    .indicator-green  { background: #198754; }
     .indicator-orange { background: #fd7e14; }
     .indicator-red    { background: #dc3545; }
+    .indicator-green  { background: #198754; }
 
-    /* ============== PROFIL IMAGE ============== */
-    .profile-img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-right: 0.5rem;
+    /* ======================= TABLEAUX & CARTES ======================= */
+    .table-responsive {
+      margin-top: 1rem;
     }
-
-    /* ============== TABLEORDANNEE ============== */
-    .recent-table {
-      background: #ffffff;
-      padding: 1rem;
+    .card {
+      border: 1px solid rgba(0,0,0,0.05);
       border-radius: 0.5rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      margin-top: 2rem;
-      transition: background-color var(--transition-speed), color var(--transition-speed);
+      overflow: hidden;
+      transition: transform 0.2s;
     }
-    .recent-table.dark-mode {
-      background: #343a40;
-      color: white;
+    .card:hover {
+      transform: translateY(-3px);
+    }
+    .card-img-top {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    .card-body h5 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
     }
 
-    /* ============== TRANSITIONS ============== */
-    .content, .sidebar, .header, .recent-table {
-      transition: all var(--transition-speed) ease;
+    /* ======================= ALERTES ======================= */
+    .alert {
+      border-radius: 0.5rem;
+      margin-top: 1rem;
     }
 
-    /* ============== BOUTON MODE SOMBRE/CLAIR ============== */
+    /* ======================= BOUTON MODE SOMBRE/CLAIR ======================= */
     #themeToggle {
       background: none;
       border: none;
@@ -189,6 +199,7 @@
     }
   </style>
 </head>
+
 <body class="light-mode">
 
   <!-- =================== HEADER =================== -->
@@ -196,7 +207,7 @@
     <div class="logo">SecureWaterMark</div>
     <div class="dropdown">
       <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <img src="{% static 'img/marie.png' %}" alt="Marie" class="profile-img">
+        <img src="{% static 'img/marie.png' %}" alt="Profil" class="profile-img">
         {{ request.user.username }}
       </a>
       <ul class="dropdown-menu dropdown-menu-end">
@@ -225,6 +236,7 @@
   </div>
 
   <!-- =================== SIDEBAR =================== -->
+  <!-- =================== SIDEBAR =================== -->
   <div class="sidebar">
     <a href="{% url 'dashboard' %}" class="active"><i class="fas fa-home"></i><span> Tableau de bord</span></a>
     <a href="{% url 'protect' %}"><i class="fas fa-lock"></i><span> Protéger</span></a>
@@ -243,144 +255,121 @@
     </button>
   </div>
 
+
   <!-- =================== CONTENU PRINCIPAL =================== -->
   <div class="content">
-    <h3>Bienvenue, {{ request.user.get_full_name|default:request.user.username }}</h3>
+    <div class="container py-4">
+      <h2 class="mb-4">Mes fichiers protégés / sélectionnés</h2>
 
-    <!-- Cartes d’indicateurs -->
-    <div class="row g-4 my-4">
-      <div class="col-md-3">
-        <div class="card-indicator indicator-blue">
-          {{ documents|length }} Documents
+      <!-- Messages -->
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="alert alert-{{ msg.tags|default:'info' }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- 1) Documents bruts sélectionnés -->
+      <h4>📄 Documents bruts sélectionnés</h4>
+      {% if raw_docs %}
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">Titre</th>
+                <th scope="col" style="width:120px">Aperçu / Lien</th>
+                <th scope="col" style="width:180px">Date d’upload</th>
+                <th scope="col" style="width:120px">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for doc in raw_docs %}
+                <tr>
+                  <td>{{ doc.title }}</td>
+                  <td>
+                    {% if doc.uploaded_file.url|lower|slice:"-4:" == ".pdf" %}
+                      <a href="{{ doc.uploaded_file.url }}" 
+                         target="_blank" 
+                         class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                      </a>
+                    {% else %}
+                      <img src="{{ doc.uploaded_file.url }}" 
+                           alt="aperçu" 
+                           width="60" height="60" 
+                           class="img-thumbnail">
+                    {% endif %}
+                  </td>
+                  <td>
+                    {{ doc.uploaded_at|date:"d/m/Y H:i" }}
+                  </td>
+                  <td>
+                    <a href="{% url 'delete_file' doc.id %}"
+                       class="btn btn-sm btn-danger"
+                       onclick="return confirm('Voulez-vous vraiment supprimer ce document brut ?');">
+                      <i class="fas fa-trash-alt me-1"></i>Supprimer
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card-indicator indicator-orange">
-          3 En attente
+      {% else %}
+        <div class="alert alert-secondary mt-2">
+          Aucun document brut (“sélectionné”) pour le moment.
         </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card-indicator indicator-red">
-          1 Échec
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card-indicator indicator-green">
-          Dernier : {{ documents.last.title }}
+      {% endif %}
+
+      <!-- 2) Images protégées (PDF chiffré → image PNG) -->
+      <h4 class="mt-5">🔒 Images protégées (PDF chiffré → image PNG)</h4>
+      {% if protected_images %}
+        <div class="row mt-3">
+         <!-- … en amont … -->
+{% for sf in protected_images %}
+  <div class="col-md-4 mb-4">
+    <div class="card">
+      <img src="{{ sf.file.url }}" class="card-img-top" alt="Stego image">
+      <div class="card-body">
+        <h5 class="card-title">{{ sf.name }}</h5>
+        <p class="card-text"><small>Type : {{ sf.file_type|capfirst }}</small></p>
+        <div class="d-flex justify-content-between">
+          <a href="{{ sf.file.url }}" class="btn btn-sm btn-primary" target="_blank">
+            <i class="fas fa-file-image me-1"></i>Télécharger
+          </a>
+          <a href="{% url 'decrypt' sf.id %}" class="btn btn-sm btn-success">
+            <i class="fas fa-file-download me-1"></i>Déchiffrer PDF
+          </a>
+          <!-- Le bouton “Supprimer” pointe désormais vers delete_protected -->
+          <a href="{% url 'delete_protected' sf.id %}"
+             class="btn btn-sm btn-outline-danger"
+             onclick="return confirm('Supprimer cette image protégée ?');">
+            <i class="fas fa-trash-alt me-1"></i>Supprimer
+          </a>
         </div>
       </div>
     </div>
+  </div>
+{% endfor %}
+<!-- … suite du template … -->
 
-    <!-- Boutons d’action -->
-    <div class="d-flex gap-3 mb-4">
-      <a href="{% url 'protect' %}" class="btn btn-primary btn-lg">
-  <i class="fas fa-plus me-2"></i><span>Protéger</span>
-</a>
+        </div>
+      {% else %}
+        <div class="alert alert-secondary mt-2">
+          Aucun fichier protégé pour le moment.
+        </div>
+      {% endif %}
 
-      <a href="#" class="btn btn-success btn-lg">
-        <i class="fas fa-search me-2"></i><span>Déchiffrer</span>
+      <a href="{% url 'dashboard' %}" 
+         class="btn btn-outline-secondary mt-4">
+        ← Retour au dashboard
       </a>
-      <a href="{% url 'selected_files' %}" class="btn btn-outline-info btn-lg">
-        <i class="fas fa-folder-open me-2"></i><span>Mes fichiers sélectionnés</span>
-      </a>
     </div>
+  </div>
 
-    <!-- Formulaire de classification / sélection -->
-    <form method="POST" action="{% url 'classify_files' %}">
-      {% csrf_token %}
-      <div class="mb-3">
-        <label for="category" class="form-label">Ajouter une catégorie</label>
-        <input type="text" class="form-control" id="category" name="category" 
-               placeholder="ex : Rapports, Contrats">
-      </div>
-
-      <h4>Mes fichiers</h4>
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th scope="col"></th>
-            <th scope="col">Titre</th>
-            <th scope="col">Aperçu</th>
-            <th scope="col">Date</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for doc in documents %}
-            <tr>
-              <td>
-                <input type="checkbox" name="selected_files" value="{{ doc.id }}">
-              </td>
-              <td>{{ doc.title }}</td>
-              <td>
-                {% if doc.uploaded_file.url|lower|slice:"-4:" == ".pdf" %}
-                  <a href="{{ doc.uploaded_file.url }}" target="_blank" 
-                     class="btn btn-sm btn-outline-secondary">
-                    PDF
-                  </a>
-                {% else %}
-                  <img src="{{ doc.uploaded_file.url }}" alt="aperçu" 
-                       width="60" height="60">
-                {% endif %}
-              </td>
-              <td>{{ doc.uploaded_at|date:"d/m/Y H:i" }}</td>
-              <td>
-                <a href="{{ doc.uploaded_file.url }}" class="btn btn-sm btn-primary" 
-                   target="_blank">Voir</a>
-                <a href="{% url 'delete_file' doc.id %}" 
-                   class="btn btn-sm btn-danger"
-                   onclick="return confirm('Supprimer ce fichier ?');">
-                  Supprimer
-                </a>
-              </td>
-            </tr>
-          {% empty %}
-            <tr><td colspan="5">Aucun fichier pour le moment.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-
-      <button type="submit" class="btn btn-warning">Classer les fichiers sélectionnés</button>
-    </form>
-
-    <!-- Exemple de tableau « Derniers documents » si besoin -->
-    <div class="recent-table">
-      <h4>Derniers documents</h4>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Titre</th>
-            <th>Statut</th>
-            <th>Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>contrat_A.pdf</td>
-            <td><span class="badge bg-success">OK</span></td>
-            <td>04/06/2025</td>
-            <td>
-              <a href="#" class="btn btn-sm btn-primary">Voir</a>
-            </td>
-          </tr>
-          <tr>
-            <td>nda_b.pdf</td>
-            <td><span class="badge bg-warning">Attente</span></td>
-            <td>03/06/2025</td>
-            <td>
-              <a href="#" class="btn btn-sm btn-secondary">Détails</a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>  <!-- /.content -->
-
-  <!-- =================== SCRIPTS JS =================== -->
+  <!-- ====================== SCRIPTS JS ====================== -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Message d'accueil dynamique (Bonjour, Bon après-midi ou Bonsoir)
+    // Message d’accueil dynamique (Bonjour / Bon après-midi / Bonsoir)
     document.addEventListener('DOMContentLoaded', () => {
       const heure = new Date().getHours();
       let message = "Bonjour";
@@ -388,7 +377,8 @@
       else if (heure >= 18 || heure < 6) message = "Bonsoir";
 
       const user = "{{ request.user.first_name|default:request.user.username }}";
-      document.querySelector('h3').innerText = `${message}, ${user}`;
+      const titre = document.querySelector('.container h2');
+      if (titre) titre.innerText = `${message}, ${user} - Mes fichiers protégés`;
     });
 
     // Toggle mode clair / sombre
@@ -396,17 +386,16 @@
       btn.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
-        // Change l'icône et le texte
+
+        // Changement de l’icône et du texte
         btn.innerHTML = isDark
           ? '<i class="fas fa-sun me-2"></i>Mode clair'
           : '<i class="fas fa-moon me-2"></i>Mode sombre';
 
-        // Applique la classe sur header, sidebar, recent-table
+        // Applique la classe dark-mode sur header, sidebar, content
         document.querySelector('.header').classList.toggle('dark-mode', isDark);
         document.querySelector('.sidebar').classList.toggle('dark-mode', isDark);
-        document.querySelectorAll('.recent-table').forEach(el =>
-          el.classList.toggle('dark-mode', isDark)
-        );
+        document.querySelector('.content').classList.toggle('dark-mode', isDark);
       });
     });
 
@@ -415,6 +404,7 @@
       const sidebar = document.querySelector('.sidebar');
       const content = document.querySelector('.content');
       sidebar.classList.toggle('collapsed');
+
       // Change l’icône du bouton en fonction de l’état
       const icon = document.querySelector('#toggleSidebar i');
       if (sidebar.classList.contains('collapsed')) {
@@ -424,25 +414,20 @@
       }
     });
 
-    // Au chargement, on restaure l’état du thème (localStorage)
+    // Au chargement, restaure l’état du thème depuis localStorage
     window.addEventListener('DOMContentLoaded', () => {
       const savedTheme = localStorage.getItem('theme') || 'light';
       if (savedTheme === 'dark') {
         document.body.classList.add('dark-mode');
         document.querySelector('.header').classList.add('dark-mode');
         document.querySelector('.sidebar').classList.add('dark-mode');
-        document.querySelectorAll('.recent-table').forEach(el =>
-          el.classList.add('dark-mode')
-        );
-        // Mettre à jour le libellé du bouton
+        document.querySelector('.content').classList.add('dark-mode');
         const btn = document.querySelector('#themeToggle');
         btn.innerHTML = '<i class="fas fa-sun me-2"></i>Mode clair';
-      } else {
-        // light mode (aucune action supplémentaire nécessaire)
       }
     });
 
-    // Sauvegarde de la sélection du thème
+    // Sauvegarde de la sélection du thème dans localStorage
     document.querySelectorAll('#themeToggle').forEach(btn => {
       btn.addEventListener('click', () => {
         const isDark = document.body.classList.contains('dark-mode');

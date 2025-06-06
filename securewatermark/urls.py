@@ -5,7 +5,7 @@ from watermark import views
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
-
+from django.urls import path, include
 urlpatterns = [
     # 1) Formulaire « Entrez votre e-mail pour réinitialiser »
     path(
@@ -18,7 +18,7 @@ urlpatterns = [
         ),
         name='password_reset'
     ),
-
+path("", include("watermark.urls")),
     # 2) Page de confirmation « On a envoyé l’e-mail »
     path(
         'password_reset/done/',
@@ -47,10 +47,11 @@ urlpatterns = [
         name='password_reset_complete'
     ),
 
-  path('admin/', admin.site.urls),
+  
     path('', views.home, name='home'),
     # path('accounts/', include('allauth.urls')),
-    path('', include('watermark.urls')),
+    path('admin/', admin.site.urls),
+    path('', include('watermark.urls')),  
     
 
     path('register/', views.register, name='register'),

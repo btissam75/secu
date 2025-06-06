@@ -244,17 +244,7 @@
           <h4>Créer un compte</h4>
         </div>
 
-        {% if form.errors %}
-          <div class="error-list">
-            <ul>
-              {% for field, errors in form.errors.items %}
-                {% for error in errors %}
-                  <li>{{ error }}</li>
-                {% endfor %}
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
+        
 
         <form method="POST">
           {% csrf_token %}

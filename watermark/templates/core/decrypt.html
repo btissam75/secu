@@ -1,0 +1,269 @@
+
+{% extends "watermark/base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+    /* ============== Variables CSS ============== */
+    :root {
+      --gradient: linear-gradient(90deg, #ee7724, #d8363a, #dd3675, #b44593);
+      --light-bg: #ffffff; 
+      --light-text: #343a40;
+      --sidebar-bg: #ee7724;
+      --dark-bg: #212529;
+      --dark-text: #f8f9fa;
+      --transition-speed: 0.4s;
+    }
+
+    /* ============== Reset de base ============== */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      transition: background-color var(--transition-speed), color var(--transition-speed);
+    }
+
+    /* ============== HEADER ============== */
+    .header {
+      background-color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      transition: background-color var(--transition-speed);
+    }
+    .header.dark-mode {
+      background-color: var(--dark-bg);
+    }
+    .logo {
+      font-size: 1.4rem;
+      font-weight: bold;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* ============== SIDEBAR ============== */
+    .sidebar {
+      position: fixed;
+      top: 56px; /* hauteur du header */
+      left: 0;
+      width: 220px;
+      height: calc(100vh - 56px);
+      background: var(--gradient);
+      color: white;
+      padding-top: 1rem;
+      overflow-y: auto;
+      transition: width var(--transition-speed), background-color var(--transition-speed);
+    }
+    .sidebar.collapsed {
+      width: 60px; /* rétrécit la sidebar */
+    }
+    .sidebar a {
+      display: block;
+      padding: 0.75rem 1rem;
+      color: white;
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .sidebar a i {
+      margin-right: 0.75rem;
+    }
+    .sidebar a:hover,
+    .sidebar a.active {
+      background-color: rgba(255,255,255,0.1);
+    }
+    .sidebar.dark-mode {
+      background-color: #1f1f1f;
+    }
+    /* masque le texte quand la sidebar est réduite */
+    .sidebar.collapsed a span {
+      display: none;
+    }
+    /* bouton pour réduire/agrandir la sidebar */
+    .toggle-sidebar-btn {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color var(--transition-speed);
+    }
+    .toggle-sidebar-btn:hover {
+      background-color: rgba(255,255,255,0.3);
+    }
+
+    /* ============== CONTENU PRINCIPAL ============== */
+    .content {
+      margin-top: 56px; /* hauteur du header */
+      margin-left: 220px; /* largeur de la sidebar */
+      padding: 2rem;
+      background-color: var(--light-bg);
+      color: var(--light-text);
+      min-height: calc(100vh - 56px);
+      transition: margin-left var(--transition-speed), background-color var(--transition-speed), color var(--transition-speed);
+    }
+    .sidebar.collapsed ~ .content {
+      margin-left: 60px;
+    }
+    .content.dark-mode {
+      background-color: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    /* ============== CARTES D’INDICATEURS ============== */
+    .card-indicator {
+      padding: 1rem;
+      color: white;
+      border-radius: 0.5rem;
+      text-align: center;
+      font-weight: bold;
+    }
+    .indicator-blue   { background: #0d6efd; }
+    .indicator-orange { background: #fd7e14; }
+    .indicator-red    { background: #dc3545; }
+    .indicator-green  { background: #198754; }
+
+    /* ============== PROFIL IMAGE ============== */
+    .profile-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 0.5rem;
+    }
+
+    /* ============== FORMULAIRES ============== */
+    .settings-section {
+      background: #ffffff;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+      transition: background-color var(--transition-speed), color var(--transition-speed);
+    }
+    .settings-section.dark-mode {
+      background: #2e2e2e;
+      color: #f1f1f1;
+    }
+    .settings-section h4 {
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 0.5rem;
+    }
+    .settings-section.dark-mode h4 {
+      border-color: #555;
+    }
+    .form-control, .form-check-input {
+      transition: background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
+    }
+    .form-control.dark-mode {
+      background-color: #3a3a3a;
+      border-color: #555;
+      color: #f1f1f1;
+    }
+    .form-check-label.dark-mode {
+      color: #f1f1f1;
+    }
+    .btn-save {
+      background: var(--gradient);
+      border: none;
+      color: white;
+    }
+    .btn-save:hover {
+      opacity: 0.9;
+    }
+  </style>
+
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-unlock-fill icon-large"></i>
+                            <h3 class="mb-0">Révéler & Déchiffrer un Message</h3>
+                        </div>
+                        <div class="card-body">
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    {% for error in form.non_field_errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                
+                                <div class="mb-4">
+                                    <label for="{{ form.image.id_for_label }}" class="form-label">Image avec message caché</label>
+                                    {{ form.image }}
+                                    <div class="form-text">Sélectionnez l'image contenant le message caché.</div>
+                                    {% if form.image.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.image.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <img id="imagePreview" src="#" alt="Aperçu de l'image" class="image-preview"/>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="{{ form.password.id_for_label }}" class="form-label">Mot de passe</label>
+                                    {{ form.password }}
+                                    <div class="form-text">Entrez le mot de passe utilisé pour chiffrer le message.</div>
+                                    {% if form.password.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.password.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-save mt-3">
+                                        <i class="bi bi-unlock-fill me-2"></i>Révéler & Déchiffrer
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            {% if decrypted_message %}
+                                <div class="result-box">
+                                    <h4 class="mb-3">Message révélé :</h4>
+                                    <p class="mb-0">{{ decrypted_message }}</p>
+                                </div>
+                            {% endif %}
+                            <a href="{% url 'dashboard' %}" 
+         class="btn btn-outline-secondary mt-4">
+        ← Retour au dashboard
+      </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endblock %}

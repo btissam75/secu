@@ -1,4 +1,7 @@
 # watermark/views.py
+from django.contrib.auth.models import User
+
+
 
 import os
 import binascii
@@ -9,7 +12,8 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+
+from .models import DecryptedDocument
 
 from .models import Document, SecureFile
 from .forms import CreateNewUser
@@ -26,7 +30,7 @@ from django.conf import settings
 
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
+
 
 from .models import Profile, Document, SecureFile       # <-- Profile, Document, SecureFile importés depuis models.py
 from .utils.crypto_utils import encrypt_bytes, decrypt_bytes
@@ -82,20 +86,112 @@ def selected_files(request):
         'documents': selected_docs,
         'secure_files': secure_files,
     })
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.models import User
+from .models import Profile
+
+# watermark/views.py
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.models import User
+from .models import Profile
+
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
+from .models import Profile
+
+
+
+# watermark/views.py
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from .models import Profile
+
+# watermark/views.py
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+# watermark/views.py
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.auth import authenticate, login
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django.contrib import messages
+
+# watermark/views.py
+
+from django.shortcuts import render, redirect
+# watermark/views.py
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+# watermark/views.py
+
+from django.contrib.auth import get_user_model, authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.conf import settings
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
+
+from .models import Profile, Document, SecureFile, DecryptedDocument
+from .forms  import RegisterForm
+from .utils.crypto_utils  import encrypt_bytes, decrypt_bytes
+from .utils.stego_utils   import embed_bytes_in_image, extract_bytes_from_image
+
+User = get_user_model()  # Si vous avez un AUTH_USER_MODEL personnalisé,
+                        # sinon, get_user_model() renverra django.contrib.auth.models.User
+
 def register(request):
     if request.method == 'POST':
-        form = CreateNewUser(request.POST)
+        form = RegisterForm(request.POST)
         if form.is_valid():
-            form.save()
-            username = form.cleaned_data.get('username')
-            messages.success(request, f"Le compte « {username} » a été créé avec succès !")
-            return redirect('login')
-        else:
-            messages.error(request, "Erreur dans le formulaire. Veuillez corriger.")
-    else:
-        form = CreateNewUser()
+            username = form.cleaned_data['username']
+            email    = form.cleaned_data['email']
+            pwd1     = form.cleaned_data['password1']
 
-    return render(request, 'watermark/register.html', {'form': form})
+            # Vérifier qu’aucun utilisateur n’existe déjà
+            if User.objects.filter(username=username).exists():
+                messages.error(request, "Ce nom d’utilisateur est déjà pris.")
+            elif User.objects.filter(email=email).exists():
+                messages.error(request, "Cette adresse email est déjà utilisée.")
+            else:
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=pwd1
+                )
+                Profile.objects.create(user=user)
+
+                user = authenticate(request, username=username, password=pwd1)
+                if user is not None:
+                    login(request, user)
+
+                messages.success(request, "Votre compte a bien été créé.")
+                return redirect('login')
+
+    else:
+        form = RegisterForm()
+
+    return render(request, 'register.html', {'form': form})
+
+
+
 
 
 # ───────────────────────────── PAGES PUBLIQUES ─────────────────────────────
@@ -236,6 +332,16 @@ import os, time, uuid
 from .models import Document, SecureFile
 from .utils.crypto_utils import encrypt_bytes, decrypt_bytes
 from .utils.stego_utils   import embed_bytes_in_image, extract_bytes_from_image
+@login_required
+def delete_decrypted(request, doc_id):
+    doc = get_object_or_404(DecryptedDocument, id=doc_id, user=request.user)
+    # Supprimer le fichier physique (optionnel)
+    filepath = os.path.join(settings.MEDIA_ROOT, doc.file.name)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    # Supprimer la ligne en base
+    doc.delete()
+    return redirect('decrypted_list')
 
 @login_required
 def selected_files(request):
@@ -680,8 +786,138 @@ class Message(models.Model):
 
     def __str__(self):
         return f"De {self.sender} → {self.recipient} ({self.sent_at:%d/%m/%Y %H:%M})"
-#________________________________________________________________autres views....
+#________________________________________________________________wijdane______________....
 
+from django.shortcuts import render, redirect
+from django.http import HttpResponse, FileResponse
+from django.views.generic import TemplateView, FormView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+from PIL import Image
+import io
+import os
+from .utils.crypto_utils import encrypt_bytes, decrypt_bytes
+from .utils.stego_utils    import embed_bytes_in_image, extract_bytes_from_image
+
+from django import forms
+
+class ImageUploadForm(forms.Form):
+    image = forms.ImageField(
+        label="Image",
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'})
+    )
+    
+class EncryptForm(ImageUploadForm):
+    message = forms.CharField(
+        label="Message",
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Entrez votre message secret...'})
+    )
+    password = forms.CharField(
+        label="Mot de passe",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Mot de passe pour chiffrer'})
+    )
+
+class DecryptForm(ImageUploadForm):
+    password = forms.CharField(
+        label="Mot de passe",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Mot de passe pour déchiffrer'})
+    )
+
+
+
+class EncryptView(LoginRequiredMixin, FormView):
+    template_name = 'core/encrypt.html'
+    form_class = EncryptForm
+    success_url = reverse_lazy('core:encrypt')
+    
+    def form_valid(self, form):
+        image_file = form.cleaned_data['image']
+        message = form.cleaned_data['message']
+        password = form.cleaned_data['password']
+        
+        try:
+            # Open and process the image
+            img = Image.open(image_file)
+            img_format = img.format if img.format else 'PNG'
+            
+            # Ensure image is in RGB for LSB
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+                
+            # Encrypt the message
+            encrypted_data = encrypt_message(message, password)
+            if not encrypted_data:
+                form.add_error(None, "Échec du chiffrement.")
+                return self.form_invalid(form)
+                
+            # Hide encrypted data in the image
+            stego_image = hide_data_in_image(img, encrypted_data)
+            if not stego_image:
+                form.add_error(None, "Échec de la dissimulation des données dans l'image. Les données sont peut-être trop volumineuses pour cette image.")
+                return self.form_invalid(form)
+                
+            # Prepare image for download
+            output_buffer = io.BytesIO()
+            stego_image.save(output_buffer, format='PNG')
+            output_buffer.seek(0)
+            
+            # Create response with the image
+            response = HttpResponse(output_buffer.getvalue(), content_type='image/png')
+            response['Content-Disposition'] = 'attachment; filename="stego_image.png"'
+            
+            return response
+            
+        except Exception as e:
+            form.add_error(None, f"Une erreur s'est produite: {str(e)}")
+            return self.form_invalid(form)
+            
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        return context
+
+class DecryptView(LoginRequiredMixin, FormView):
+    template_name = 'core/decrypt.html'
+    form_class = DecryptForm
+    success_url = reverse_lazy('core:decrypt')
+    
+    def form_valid(self, form):
+        image_file = form.cleaned_data['image']
+        password = form.cleaned_data['password']
+        
+        try:
+            # Open and process the image
+            img = Image.open(image_file)
+            
+            # Ensure image is in RGB for LSB
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+                
+            # Reveal data from the image
+            revealed_data = reveal_data_from_image(img)
+            if not revealed_data:
+                form.add_error(None, "Échec de la révélation des données de l'image. Aucun message caché trouvé ou délimiteur manquant.")
+                return self.form_invalid(form)
+                
+            # Decrypt the revealed data
+            decrypted_message = decrypt_message(revealed_data, password)
+            if decrypted_message is None:
+                form.add_error(None, "Échec du déchiffrement. Mot de passe incorrect ou données corrompues.")
+                return self.form_invalid(form)
+                
+            # Return the same page with the decrypted message
+            context = self.get_context_data(form=form)
+            context['decrypted_message'] = decrypted_message
+            return self.render_to_response(context)
+            
+        except Exception as e:
+            form.add_error(None, f"Une erreur s'est produite: {str(e)}")
+            return self.form_invalid(form)
+            
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        return context
 
 
 

@@ -195,15 +195,14 @@
     }
   </style>
 
-  <!-- Main Content -->
-    <div class="main-content">
+  <div class="main-content">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
                     <div class="card">
                         <div class="card-header">
-                            <i class="bi bi-unlock-fill icon-large"></i>
-                            <h3 class="mb-0">Révéler & Déchiffrer un Message</h3>
+                            <i class="bi bi-lock-fill icon-large"></i>
+                            <h3 class="mb-0">Chiffrer & Cacher un Message</h3>
                         </div>
                         <div class="card-body">
                             {% if form.non_field_errors %}
@@ -218,9 +217,9 @@
                                 {% csrf_token %}
                                 
                                 <div class="mb-4">
-                                    <label for="{{ form.image.id_for_label }}" class="form-label">Image avec message caché</label>
+                                    <label for="{{ form.image.id_for_label }}" class="form-label">Image</label>
                                     {{ form.image }}
-                                    <div class="form-text">Sélectionnez l'image contenant le message caché.</div>
+                                    <div class="form-text">Sélectionnez une image dans laquelle cacher votre message.</div>
                                     {% if form.image.errors %}
                                         <div class="text-danger">
                                             {% for error in form.image.errors %}
@@ -232,9 +231,22 @@
                                 </div>
                                 
                                 <div class="mb-4">
+                                    <label for="{{ form.message.id_for_label }}" class="form-label">Message Secret</label>
+                                    {{ form.message }}
+                                    <div class="form-text">Entrez le message que vous souhaitez cacher dans l'image.</div>
+                                    {% if form.message.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.message.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-4">
                                     <label for="{{ form.password.id_for_label }}" class="form-label">Mot de passe</label>
                                     {{ form.password }}
-                                    <div class="form-text">Entrez le mot de passe utilisé pour chiffrer le message.</div>
+                                    <div class="form-text">Ce mot de passe sera nécessaire pour déchiffrer le message plus tard.</div>
                                     {% if form.password.errors %}
                                         <div class="text-danger">
                                             {% for error in form.password.errors %}
@@ -246,27 +258,20 @@
                                 
                                 <div class="d-grid">
                                     <button type="submit" class="btn btn-save mt-3">
-                                        <i class="bi bi-unlock-fill me-2"></i>Révéler & Déchiffrer
+                                        <i class="bi bi-lock-fill me-2"></i>Chiffrer & Cacher
                                     </button>
-                                </div>
-                            </form>
-                            
-                            {% if decrypted_message %}
-                                <div class="result-box">
-                                    <h4 class="mb-3">Message révélé :</h4>
-                                    <p class="mb-0">{{ decrypted_message }}</p>
-                                </div>
-                            {% endif %}
-                            <a href="{% url 'dashboard' %}" 
+                                     <a href="{% url 'dashboard' %}" 
          class="btn btn-outline-secondary mt-4">
         ← Retour au dashboard
       </a>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-  
+
    
     {% endblock %}

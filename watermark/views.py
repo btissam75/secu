@@ -1,42 +1,28 @@
 # watermark/views.py
 from django.contrib.auth.models import User
-
-
-
-import os
-import binascii
+from django.contrib.auth import get_user_model, authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import reverse
+from django.http import HttpResponse, HttpResponseRedirect, FileResponse
+from django.urls import reverse, reverse_lazy
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.views.generic import TemplateView, FormView
+from django.utils import timezone
+from PIL import Image
+import os
+import binascii
+import io
+import time
+import uuid
 
-from .models import DecryptedDocument
-
-from .models import Document, SecureFile
-from .forms import CreateNewUser
+from .models import Profile, Document, SecureFile, DecryptedDocument
+from .forms import RegisterForm
 from .utils.crypto_utils import encrypt_bytes, decrypt_bytes
 from .utils.stego_utils import embed_bytes_in_image, extract_bytes_from_image
 
-# watermark/views.py
-
-import os
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.conf import settings
-
-from django.urls import reverse
-from django.contrib.auth import authenticate, login, logout
-
-
-from .models import Profile, Document, SecureFile       # <-- Profile, Document, SecureFile importés depuis models.py
-from .utils.crypto_utils import encrypt_bytes, decrypt_bytes
-from .utils.stego_utils    import embed_bytes_in_image, extract_bytes_from_image
-
-# Vos vues…
+User = get_user_model()
 
 # ──────────────────────────── AUTHENTIFICATION ────────────────────────────
 
@@ -44,7 +30,8 @@ def login_view(request):
     if request.method == 'POST':
         identifiant = request.POST.get('username')
         password = request.POST.get('password')
-        # Si l’utilisateur saisit un email, on le convertit en username
+        
+        # Si l'utilisateur saisit un email, on le convertit en username
         if '@' in identifiant:
             try:
                 user_obj = User.objects.get(email=identifiant)
@@ -70,104 +57,18 @@ def userLogout(request):
     logout(request)
     return redirect('home')
 
-def selected_files(request):
-    """
-    Affiche deux sections :
-      1. Les Document “sélectionnés” (is_selected=True)
-      2. Les SecureFile (images stéganographiées contenant le PDF chiffré)
-    """
-    # 1) Tous les Document de l’utilisateur marqués is_selected=True
-    selected_docs = Document.objects.filter(user=request.user, is_selected=True)
-
-    # 2) Tous les SecureFile de l’utilisateur (images protégées)
-    secure_files = SecureFile.objects.filter(user=request.user)
-
-    return render(request, 'watermark/selected_files.html', {
-        'documents': selected_docs,
-        'secure_files': secure_files,
-    })
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.models import User
-from .models import Profile
-
-# watermark/views.py
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.models import User
-from .models import Profile
-
-
-
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
-from .models import Profile
-
-
-
-# watermark/views.py
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login
-from django.contrib import messages
-from .models import Profile
-
-# watermark/views.py
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-# watermark/views.py
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib import messages
-from django.contrib.auth import authenticate, login
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib import messages
-
-# watermark/views.py
-
-from django.shortcuts import render, redirect
-# watermark/views.py
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-# watermark/views.py
-
-from django.contrib.auth import get_user_model, authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.conf import settings
-from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import reverse
-
-from .models import Profile, Document, SecureFile, DecryptedDocument
-from .forms  import RegisterForm
-from .utils.crypto_utils  import encrypt_bytes, decrypt_bytes
-from .utils.stego_utils   import embed_bytes_in_image, extract_bytes_from_image
-
-User = get_user_model()  # Si vous avez un AUTH_USER_MODEL personnalisé,
-                        # sinon, get_user_model() renverra django.contrib.auth.models.User
 
 def register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data['username']
-            email    = form.cleaned_data['email']
-            pwd1     = form.cleaned_data['password1']
+            email = form.cleaned_data['email']
+            pwd1 = form.cleaned_data['password1']
 
-            # Vérifier qu’aucun utilisateur n’existe déjà
+            # Vérifier qu'aucun utilisateur n'existe déjà
             if User.objects.filter(username=username).exists():
-                messages.error(request, "Ce nom d’utilisateur est déjà pris.")
+                messages.error(request, "Ce nom d'utilisateur est déjà pris.")
             elif User.objects.filter(email=email).exists():
                 messages.error(request, "Cette adresse email est déjà utilisée.")
             else:
@@ -184,13 +85,10 @@ def register(request):
 
                 messages.success(request, "Votre compte a bien été créé.")
                 return redirect('login')
-
     else:
         form = RegisterForm()
 
-    return render(request, 'register.html', {'form': form})
-
-
+    return render(request, 'watermark/register.html', {'form': form})
 
 
 
@@ -203,194 +101,17 @@ def home(request):
 def help_view(request):
     return render(request, 'watermark/help.html')
 
-# … du code en haut de fichier …
-
-
-
-# ─────────────────────────────── VUES PROTÉGER ───────────────────────────────
-
-# watermark/views.py
-
-import os
-from django.shortcuts import render, redirect
-from django.conf import settings
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from .models import SecureFile
-from .utils.crypto_utils import encrypt_bytes
-from .utils.stego_utils import embed_bytes_in_image
-
-@login_required
-def protect(request):
-    """
-    Vue permettant à l’utilisateur d’uploader un PDF et de le cacher chiffré dans une image PNG.
-    """
-    if request.method == 'POST':
-        # "mode" pourra servir à d’autres types de protection (texte, image…), ici on vérifie “pdf”
-        mode = request.POST.get('mode')
-
-        # Clé AES (en prod, on définit settings.AES_KEY dans settings.py)
-        key = getattr(settings, 'AES_KEY', b'\x02' * 32)
-
-        if mode == 'pdf':
-            uploaded_pdf = request.FILES.get('uploaded_pdf')
-            cover_image   = request.FILES.get('cover_image')
-            title         = request.POST.get('title') or (uploaded_pdf.name if uploaded_pdf else '')
-
-            # Si l’utilisateur n’a pas sélectionné de PDF, on remonte une erreur
-            if not uploaded_pdf:
-                messages.error(request, "Veuillez sélectionner un fichier PDF à protéger.")
-                return redirect('protect')
-
-            # 1) Enregistrer temporairement le PDF sous media/temp/…
-            temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')
-            os.makedirs(temp_dir, exist_ok=True)
-            pdf_path = os.path.join(temp_dir, uploaded_pdf.name)
-            with open(pdf_path, 'wb') as f:
-                for chunk in uploaded_pdf.chunks():
-                    f.write(chunk)
-
-            # 2) Si l’utilisateur a fourni une image porteuse, on l’enregistre aussi en temp/
-            if cover_image:
-                cover_dir  = os.path.join(settings.MEDIA_ROOT, 'temp')
-                os.makedirs(cover_dir, exist_ok=True)
-                cover_path = os.path.join(cover_dir, cover_image.name)
-                with open(cover_path, 'wb') as f2:
-                    for chunk in cover_image.chunks():
-                        f2.write(chunk)
-            else:
-                # Sinon, on prend une image par défaut : MEDIA_ROOT/default_carrier.png
-                cover_path = os.path.join(settings.MEDIA_ROOT, 'default_carrier.png')
-                if not os.path.exists(cover_path):
-                    # Si elle est manquante, on supprime le PDF temporaire et on affiche un message
-                    messages.error(request, "L’image porteuse par défaut (default_carrier.png) est introuvable.")
-                    os.remove(pdf_path)
-                    return redirect('protect')
-
-            # 3) Lire le contenu du PDF et le chiffrer en mémoire
-            with open(pdf_path, 'rb') as f:
-                pdf_data = f.read()
-            encrypted_pdf = encrypt_bytes(pdf_data, key)
-
-            # 4) Cacher le buffer chiffré dans l’image porteuse
-            stego_dir = os.path.join(settings.MEDIA_ROOT, 'stego')
-            os.makedirs(stego_dir, exist_ok=True)
-
-            # Pour garantir un nom unique, on utilise user.id + timestamp
-            import time, uuid
-            timestamp = int(time.time())
-            rand_suffix = uuid.uuid4().hex[:6]
-            stego_filename = f"stego_{request.user.id}_{timestamp}_{rand_suffix}.png"
-            stego_path = os.path.join(stego_dir, stego_filename)
-
-            # Appel à la fonction stéganographie
-            embed_bytes_in_image(cover_path, encrypted_pdf, stego_path)
-
-            # 5) Enregistrer en base : on stocke le chemin relatif par rapport à MEDIA_ROOT
-            rel_path = os.path.relpath(stego_path, settings.MEDIA_ROOT)
-            SecureFile.objects.create(
-                user=request.user,
-                name=title or uploaded_pdf.name,
-                file=rel_path,         # ex : 'stego/stego_3_1623071234_ab12cd.png'
-                file_type='image'
-            )
-
-            # 6) Nettoyage des fichiers temporaires
-            os.remove(pdf_path)
-            if cover_image and os.path.exists(cover_path):
-                os.remove(cover_path)
-
-            messages.success(request, "Le PDF a été chiffré et caché dans une image PNG.")
-            return redirect('selected_files')
-
-    # Si GET, on affiche simplement le formulaire Protect
-    return render(request, 'watermark/protect.html')
-
-
-@login_required
-def classify_files(request):
-    """
-    Traite le formulaire où l’utilisateur coche/décoche ses documents.
-    """
-    if request.method == 'POST':
-        chosen_ids = request.POST.getlist('selected_files')
-        # Désélectionner d’abord tout
-        Document.objects.filter(user=request.user).update(is_selected=False)
-        # Sélectionner uniquement ceux cochés
-        Document.objects.filter(user=request.user, id__in=chosen_ids).update(is_selected=True)
-
-    return redirect('selected_files')
-
-
-# watermark/views.py
-from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.conf import settings
-import os, time, uuid
-
-from .models import Document, SecureFile
-from .utils.crypto_utils import encrypt_bytes, decrypt_bytes
-from .utils.stego_utils   import embed_bytes_in_image, extract_bytes_from_image
-@login_required
-def delete_decrypted(request, doc_id):
-    doc = get_object_or_404(DecryptedDocument, id=doc_id, user=request.user)
-    # Supprimer le fichier physique (optionnel)
-    filepath = os.path.join(settings.MEDIA_ROOT, doc.file.name)
-    if os.path.exists(filepath):
-        os.remove(filepath)
-    # Supprimer la ligne en base
-    doc.delete()
-    return redirect('decrypted_list')
-
-@login_required
-def selected_files(request):
-    """
-    Affiche :
-     - D’une part, la liste des Documents “bruts” que l’utilisateur a cochés (is_selected=True).
-     - D’autre part, la liste des images stéganographiées (SecureFile) déjà générées.
-    """
-    raw_docs         = Document.objects.filter(user=request.user, is_selected=True)
-    protected_images = SecureFile.objects.filter(user=request.user)
-
-    return render(request,
-                  'watermark/selected_files.html',
-                  {
-                      'raw_docs': raw_docs,
-                      'protected_images': protected_images,
-                  })
-
-
-
-@login_required
-def delete_file(request, doc_id):
-    """
-    Supprime un Document (fichier physique + entrée DB) pour l’utilisateur courant.
-    """
-    document = get_object_or_404(Document, id=doc_id, user=request.user)
-    document.uploaded_file.delete()
-    document.delete()
-    return HttpResponseRedirect(reverse('dashboard'))
-
 
 # ───────────────────────────── PAGES UTILISATEUR ─────────────────────────────
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from .models import Document, SecureFile
 
 @login_required
 def dashboard(request):
     """
-    Affiche le tableau de bord avec :
-    - tous les Documents de l'utilisateur
-    - tous les SecureFile (fichiers protégés), triés du plus récent au plus ancien
-    - quelques compteurs (en attente, en échec, dernier document…)
+    Affiche le tableau de bord avec tous les fichiers de l'utilisateur
     """
-
-    # 1) On récupère tous les documents de l’utilisateur, triés par date d’upload (champ `uploaded_at`)
     documents = Document.objects.filter(user=request.user).order_by('-uploaded_at')
-
-    # 2) Compteurs « en attente » / « en échec » (adapter selon l’existence d’un champ status)
+    
+    # Compteurs
     try:
         pending_count = documents.filter(status='pending').count()
     except:
@@ -401,50 +122,22 @@ def dashboard(request):
     except:
         error_count = 0
 
-    # 3) Dernier document (le plus récent)
-    last_doc = documents.first()  # None si l’utilisateur n’a pas encore de document
-
-    # 4) On récupère tous les SecureFile (fichiers protégés), 
-    #    triés du plus récent au plus ancien, en ordonnant par ID décroissant
+    last_doc = documents.first()
     securefiles = SecureFile.objects.filter(user=request.user).order_by('-id')
 
-    # 5) On envoie tout ça dans le contexte du template
-    return render(
-        request, 
-        'watermark/dashboard.html', 
-        {
-            'documents': documents,
-            'pending_count': pending_count,
-            'error_count': error_count,
-            'last_doc': last_doc,
-            'securefiles': securefiles,
-        }
-    )
+    return render(request, 'watermark/dashboard.html', {
+        'documents': documents,
+        'pending_count': pending_count,
+        'error_count': error_count,
+        'last_doc': last_doc,
+        'securefiles': securefiles,
+    })
 
-
-
-from django.shortcuts import render
-
-def test_filter_view(request):
-    # Cette vue ne fait qu'afficher un template de test.
-    return render(request, 'watermark/test_filter.html')
-# watermark/views.py
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-
-
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-
-from .models import Document
 
 @login_required
 def upload_document(request):
-    
     if request.method == 'POST' and request.FILES.get('document'):
         fichier = request.FILES['document']
-        # Création du Document en base
         Document.objects.create(
             user=request.user,
             title=fichier.name,
@@ -456,23 +149,10 @@ def upload_document(request):
     return render(request, 'watermark/upload.html')
 
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from .models import SecureFile
-
-@login_required
-def delete_protected(request, sf_id):
-    sf = get_object_or_404(SecureFile, id=sf_id, user=request.user)
-    sf.file.delete()
-    sf.delete()
-    return redirect('selected_files')
-
 @login_required
 def profile_view(request):
     return render(request, 'watermark/profile.html')
 
-
-# watermark/views.py
 
 @login_required
 def settings_view(request):
@@ -480,9 +160,10 @@ def settings_view(request):
     profile, _ = Profile.objects.get_or_create(user=user)
 
     if request.method == "POST":
-        # 1) Informations personnelles
+        # Informations personnelles
         new_username = request.POST.get('username', "").strip()
         new_email = request.POST.get('email', "").strip()
+        
         if new_username and new_username != user.username:
             user.username = new_username
         if new_email and new_email != user.email:
@@ -492,22 +173,22 @@ def settings_view(request):
         if 'profile_pic' in request.FILES:
             profile.profile_pic = request.FILES['profile_pic']
 
-        # 2) Changer mot de passe
+        # Changer mot de passe
         new_password = request.POST.get('password', "").strip()
         if new_password:
             user.set_password(new_password)
             messages.success(request, "Le mot de passe a été mis à jour.")
 
-        # 3) Activer/désactiver 2FA
+        # 2FA
         twofa_checked = bool(request.POST.get('enable_2fa'))
         profile.two_factor_enabled = twofa_checked
 
-        # 4) Préférence “mode sombre”
+        # Mode sombre
         dark_mode_selected = bool(request.POST.get('dark_mode'))
+        
         user.save()
         profile.save()
 
-        # Préparer la réponse (avec le cookie “dark_mode”)
         response = HttpResponseRedirect(reverse('settings'))
         if dark_mode_selected:
             response.set_cookie('dark_mode', '1', max_age=60*60*24*30, path='/')
@@ -515,188 +196,145 @@ def settings_view(request):
             response.set_cookie('dark_mode', '0', max_age=60*60*24*30, path='/')
         return response
 
-    # GET ou en cas d’erreur, on renvoie simplement la page avec le contexte
     return render(request, 'watermark/settings.html', {
         'documents': Document.objects.filter(user=request.user),
     })
 
 
-# ──────────────────────────── CHIFFRER / DÉCHIFFRER ────────────────────────────
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.conf import settings
-import os
-from .models import SecureFile
-from .utils.crypto_utils import encrypt_bytes, decrypt_bytes
-from .utils.stego_utils import embed_bytes_in_image, extract_bytes_from_image
+# ─────────────────────────────── PROTECTION DE FICHIERS ───────────────────────────────
 
 @login_required
 def protect(request):
     """
-    Si mode='pdf', on chiffre le PDF puis on cache les octets chiffrés dans une image.
+    Vue permettant de protéger un PDF en le chiffrant et le cachant dans une image
     """
     if request.method == 'POST':
-        mode = 'pdf'  # ici on force “pdf” pour l’exemple
-        key = settings.AES_KEY
+        mode = request.POST.get('mode', 'pdf')
+        key = getattr(settings, 'AES_KEY', b'\x02' * 32)
 
-        # 1) récupérer le PDF et l’image porteuse
-        uploaded_pdf = request.FILES.get('uploaded_pdf')
-        cover_image = request.FILES.get('cover_image')
+        if mode == 'pdf':
+            uploaded_pdf = request.FILES.get('uploaded_pdf')
+            cover_image = request.FILES.get('cover_image')
+            title = request.POST.get('title') or (uploaded_pdf.name if uploaded_pdf else '')
 
-        if uploaded_pdf:
-            # --- Enregistrer temporairement le PDF dans MEDIA_ROOT/temp/ ---
+            if not uploaded_pdf:
+                messages.error(request, "Veuillez sélectionner un fichier PDF à protéger.")
+                return redirect('protect')
+
+            # Enregistrer temporairement le PDF
             temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')
             os.makedirs(temp_dir, exist_ok=True)
             pdf_path = os.path.join(temp_dir, uploaded_pdf.name)
+            
             with open(pdf_path, 'wb') as f:
                 for chunk in uploaded_pdf.chunks():
                     f.write(chunk)
 
-            # --- Si l’utilisateur a fourni une image porteuse, on l’enregistre aussi ---
+            # Gérer l'image porteuse
             if cover_image:
                 cover_path = os.path.join(temp_dir, cover_image.name)
                 with open(cover_path, 'wb') as f2:
-                    for c in cover_image.chunks():
-                        f2.write(c)
+                    for chunk in cover_image.chunks():
+                        f2.write(chunk)
             else:
-                # Sinon une image par défaut (préalablement placée, ex. “default_carrier.png”)
                 cover_path = os.path.join(settings.MEDIA_ROOT, 'default_carrier.png')
+                if not os.path.exists(cover_path):
+                    messages.error(request, "L'image porteuse par défaut est introuvable.")
+                    os.remove(pdf_path)
+                    return redirect('protect')
 
-            # 2) lecture du PDF en bytes
+            # Chiffrer le PDF
             with open(pdf_path, 'rb') as f:
                 pdf_data = f.read()
-
-            # 3) chiffrement symétrique (AES) -> encrypt_bytes(pdf_data, key) renvoie b'\xIV...ciphertext...'
             encrypted_pdf = encrypt_bytes(pdf_data, key)
 
-            # 4) on compose un nom unique pour le fichier stego
-            import time
-            timestamp = int(time.time())
-            stego_filename = f"stego_{request.user.id}_{timestamp}.png"
-            stego_path = os.path.join(settings.MEDIA_ROOT, stego_filename)
+            # Créer l'image stéganographiée
+            stego_dir = os.path.join(settings.MEDIA_ROOT, 'stego')
+            os.makedirs(stego_dir, exist_ok=True)
 
-            # 5) cacher les octets chiffrés dans l’image porteuse
+            timestamp = int(time.time())
+            rand_suffix = uuid.uuid4().hex[:6]
+            stego_filename = f"stego_{request.user.id}_{timestamp}_{rand_suffix}.png"
+            stego_path = os.path.join(stego_dir, stego_filename)
+
             embed_bytes_in_image(cover_path, encrypted_pdf, stego_path)
 
-            # 6) enregistrer en base (SecureFile) pour pouvoir le lister plus tard
+            # Enregistrer en base
             rel_path = os.path.relpath(stego_path, settings.MEDIA_ROOT)
             SecureFile.objects.create(
                 user=request.user,
-                name=uploaded_pdf.name,
-                file=rel_path,       # ex : “stego_3_1623060000.png”
+                name=title or uploaded_pdf.name,
+                file=rel_path,
                 file_type='image'
             )
 
-            # 7) nettoyer les fichiers temporaires 
+            # Nettoyage
             os.remove(pdf_path)
-            if cover_image:
+            if cover_image and os.path.exists(cover_path):
                 os.remove(cover_path)
 
+            messages.success(request, "Le PDF a été chiffré et caché dans une image PNG.")
             return redirect('selected_files')
 
-    # Si GET, on affiche simplement le formulaire
     return render(request, 'watermark/protect.html')
 
+
 @login_required
-def protect_pdf_into_image(request):
+def selected_files(request):
     """
-    Alternative : fonction de test pour chiffrer un PDF déjà stocké dans MEDIA_ROOT/uploads/mon_doc.pdf
+    Affiche les fichiers sélectionnés et protégés
     """
-    pdf_path = os.path.join(settings.MEDIA_ROOT, "uploads", "mon_doc.pdf")
-    if not os.path.exists(pdf_path):
-        return HttpResponse("Le fichier mon_doc.pdf n’existe pas dans MEDIA_ROOT/uploads/.")
+    raw_docs = Document.objects.filter(user=request.user, is_selected=True)
+    protected_images = SecureFile.objects.filter(user=request.user)
 
-    with open(pdf_path, "rb") as f:
-        pdf_data = f.read()
-
-    key = getattr(settings, 'AES_KEY', b'\x02' * 32)
-    iv_and_ct = encrypt_bytes(pdf_data, key)
-
-    input_img  = os.path.join(settings.BASE_DIR, "watermark", "static", "img", "base_image.png")
-    output_dir = os.path.join(settings.MEDIA_ROOT, "stego")
-    os.makedirs(output_dir, exist_ok=True)
-    stego_path = os.path.join(output_dir, f"stego_{request.user.id}.png")
-
-    embed_bytes_in_image(input_img, iv_and_ct, stego_path)
-
-    return HttpResponse(f"Document chiffré → {stego_path}")
+    return render(request, 'watermark/selected_files.html', {
+        'raw_docs': raw_docs,
+        'protected_images': protected_images,
+        'documents': raw_docs,  # Pour compatibilité
+        'secure_files': protected_images,  # Pour compatibilité
+    })
 
 
 @login_required
-def extract_pdf_from_image(request):
+def classify_files(request):
     """
-    Déchiffre l’image stego et redonne un PDF téléchargeable.
+    Traite la sélection de fichiers
     """
-    stego_path = os.path.join(settings.MEDIA_ROOT, "stego", "stego_{0}.png".format(request.user.id))
-    if not os.path.exists(stego_path):
-        return HttpResponse("L’image stéganographiée n’a pas été trouvée.")
+    if request.method == 'POST':
+        chosen_ids = request.POST.getlist('selected_files')
+        Document.objects.filter(user=request.user).update(is_selected=False)
+        Document.objects.filter(user=request.user, id__in=chosen_ids).update(is_selected=True)
 
-    extracted = extract_bytes_from_image(stego_path)
-    key = getattr(settings, 'AES_KEY', b'\x02' * 32)
-
-    try:
-        pdf_decrypted = decrypt_bytes(extracted, key)
-    except Exception as e:
-        return HttpResponse(f"Erreur de déchiffrement : {e}")
-
-    out_dir = os.path.join(settings.MEDIA_ROOT, "recovered")
-    os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, f"recovered_{request.user.id}.pdf")
-    with open(out_path, "wb") as out_f:
-        out_f.write(pdf_decrypted)
-
-    response = HttpResponse(pdf_decrypted, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="recovered_{request.user.id}.pdf"'
-    return response
+    return redirect('selected_files')
 
 
-
-# watermark/views.py (à la fin du fichier, par exemple)
-
-from django.shortcuts            import get_object_or_404, HttpResponse
-from .models                     import SecureFile
-from .utils.crypto_utils         import decrypt_bytes
-from .utils.stego_utils          import extract_bytes_from_image
-
-import os
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
-from django.conf import settings
-from django.contrib.auth.decorators import login_required
-# from .models import SecureFile, DecryptedDocument
-from .utils.crypto_utils import decrypt_bytes
-from .utils.stego_utils import extract_bytes_from_image
+# ─────────────────────────────── DÉCHIFFREMENT ───────────────────────────────
 
 @login_required
 def decrypt(request, securefile_id):
     """
-    Extrait l’octet-array caché dans l’image stéganographiée, déchiffre le PDF,
-    renvoie soit un téléchargement du PDF, soit l’affiche en HTML (si c’était un texte).
-    Enregistre également le PDF déchiffré dans MEDIA_ROOT/decrypted_pdfs/ et en base.
+    Déchiffre un fichier protégé
     """
     sf = get_object_or_404(SecureFile, id=securefile_id, user=request.user)
     key = getattr(settings, 'AES_KEY', b'\x02' * 32)
 
-    # 1) lire l’image stéganographiée et en extraire le buffer
+    # Extraire et déchiffrer
     stego_path = os.path.join(settings.MEDIA_ROOT, sf.file.name)
     encrypted = extract_bytes_from_image(stego_path)
 
-    # 2) déchiffrer (AES)
     try:
         decrypted_bytes = decrypt_bytes(encrypted, key)
     except Exception as e:
         return HttpResponse(f"Erreur de déchiffrement : {e}")
 
-    # 3) Choisir un nom de fichier de sortie
-    #    Par exemple : recovered_<origine>.pdf
+    # Préparer le nom de fichier
     original_name = sf.name
     if original_name.lower().endswith('.pdf'):
         out_filename = f"recovered_{original_name}"
     else:
-        # on force .pdf si besoin
         out_filename = f"recovered_{sf.id}.pdf"
 
-    # 4) Écrire physiquement sous MEDIA_ROOT/decrypted_pdfs/
+    # Sauvegarder physiquement
     decrypted_dir = os.path.join(settings.MEDIA_ROOT, 'decrypted_pdfs')
     os.makedirs(decrypted_dir, exist_ok=True)
     out_path = os.path.join(decrypted_dir, out_filename)
@@ -704,7 +342,7 @@ def decrypt(request, securefile_id):
     with open(out_path, 'wb') as out_f:
         out_f.write(decrypted_bytes)
 
-    # 5) Enregistrer en base le DecryptedDocument
+    # Enregistrer en base
     rel_path = os.path.relpath(out_path, settings.MEDIA_ROOT)
     DecryptedDocument.objects.create(
         user=request.user,
@@ -712,92 +350,179 @@ def decrypt(request, securefile_id):
         file=rel_path
     )
 
-    # 6) Renvoie la réponse HTTP pour téléchargement du PDF
+    # Retourner le PDF
     response = HttpResponse(decrypted_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{out_filename}"'
     return response
-# from .models import DecryptedDocument
+
 
 @login_required
 def decrypted_list(request):
     """
-    Affiche la liste (tableau ou cartes) de tous les DecryptedDocument
-    que l’utilisateur a déjà extraits.
+    Liste des fichiers déchiffrés
     """
-    # Récupère tous les PDF déchiffrés pour l’utilisateur
     decrypted_docs = DecryptedDocument.objects.filter(user=request.user).order_by('-decrypted_at')
     return render(request, 'watermark/decrypted_list.html', {
         'decrypted_docs': decrypted_docs
     })
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.conf import settings
-import os
-# from .models import DecryptedDocument  # <— remplacez par votre modèle
+
+
+# ─────────────────────────────── SUPPRESSION ───────────────────────────────
+
+@login_required
+def delete_file(request, doc_id):
+    """
+    Supprime un document
+    """
+    document = get_object_or_404(Document, id=doc_id, user=request.user)
+    document.uploaded_file.delete()
+    document.delete()
+    return HttpResponseRedirect(reverse('dashboard'))
+
+
+@login_required
+def delete_protected(request, sf_id):
+    """
+    Supprime un fichier protégé
+    """
+    sf = get_object_or_404(SecureFile, id=sf_id, user=request.user)
+    sf.file.delete()
+    sf.delete()
+    return redirect('selected_files')
+
 
 @login_required
 def delete_decrypted(request, doc_id):
     """
-    Supprime l’objet DecryptedDocument identifié par doc_id, puis redirige vers decrypted_list.
+    Supprime un fichier déchiffré
     """
-    # 1) Récupère l’enregistrement ou renvoie 404 si l’utilisateur n’y a pas accès
     decrypted = get_object_or_404(DecryptedDocument, id=doc_id, user=request.user)
-
-    # 2) Si vous stockez physiquement le PDF dans MEDIA_ROOT, supprimez-le aussi
+    
     if decrypted.file:
         chemin_fichier = os.path.join(settings.MEDIA_ROOT, decrypted.file.name)
         if os.path.exists(chemin_fichier):
             os.remove(chemin_fichier)
-
-    # 3) Supprime l’enregistrement en base
+    
     decrypted.delete()
-
-    # 4) Retourne à la liste des PDF déchiffrés
     return redirect('decrypted_list')
-@login_required
-def decrypted_list(request):
+
+
+# ─────────────────────────────── VUES DE TEST ───────────────────────────────
+
+def test_filter_view(request):
     """
-    Affiche tous les PDF déchiffrés pour l’utilisateur courant.
+    Vue de test pour les filtres
     """
-    # Récupère les objets pour l’utilisateur connecté
-    decrypted_docs = DecryptedDocument.objects.filter(user=request.user).order_by('-decrypted_at')
+    return render(request, 'watermark/test_filter.html')
 
-    return render(request, 'watermark/decrypted_list.html', {
-        'decrypted_docs': decrypted_docs
-    })
-#=====================================================
-# watermark/models.py  (ou créez un nouveau fichier models_messaging.py si vous voulez isoler)
-from django.db import models
-from django.conf import settings
-from django.utils import timezone
 
-User = settings.AUTH_USER_MODEL
+# ─────────────────────────────── FONCTIONS UTILITAIRES STÉGANOGRAPHIE ───────────────────────────────
 
-class Message(models.Model):
-    sender    = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
-    subject   = models.CharField(max_length=200, blank=True)
-    body      = models.TextField()
-    sent_at   = models.DateTimeField(default=timezone.now)
-    read      = models.BooleanField(default=False)
+def encrypt_message(message, password):
+    """
+    Chiffre un message avec un mot de passe
+    """
+    try:
+        key = password.encode('utf-8').ljust(32, b'\0')[:32]  # Clé de 32 bytes
+        return encrypt_bytes(message.encode('utf-8'), key)
+    except Exception:
+        return None
 
-    class Meta:
-        ordering = ['-sent_at']  # Les messages les plus récents en premier
 
-    def __str__(self):
-        return f"De {self.sender} → {self.recipient} ({self.sent_at:%d/%m/%Y %H:%M})"
-#________________________________________________________________wijdane______________....
+def decrypt_message(encrypted_data, password):
+    """
+    Déchiffre des données avec un mot de passe
+    """
+    try:
+        key = password.encode('utf-8').ljust(32, b'\0')[:32]  # Clé de 32 bytes
+        decrypted_bytes = decrypt_bytes(encrypted_data, key)
+        return decrypted_bytes.decode('utf-8')
+    except Exception:
+        return None
 
-from django.shortcuts import render, redirect
-from django.http import HttpResponse, FileResponse
-from django.views.generic import TemplateView, FormView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from PIL import Image
-import io
-import os
-from .utils.crypto_utils import encrypt_bytes, decrypt_bytes
-from .utils.stego_utils    import embed_bytes_in_image, extract_bytes_from_image
+
+def hide_data_in_image(image, data):
+    """
+    Cache des données dans une image using LSB
+    """
+    try:
+        # Convertir les données en binaire
+        binary_data = ''.join(format(byte, '08b') for byte in data)
+        binary_data += '1111111111111110'  # Délimiteur de fin
+        
+        pixels = list(image.getdata())
+        
+        if len(binary_data) > len(pixels) * 3:
+            return None  # Pas assez de place
+            
+        data_index = 0
+        new_pixels = []
+        
+        for pixel in pixels:
+            if data_index < len(binary_data):
+                r, g, b = pixel
+                
+                # Modifier le LSB de chaque canal
+                if data_index < len(binary_data):
+                    r = (r & 0xFE) | int(binary_data[data_index])
+                    data_index += 1
+                if data_index < len(binary_data):
+                    g = (g & 0xFE) | int(binary_data[data_index])
+                    data_index += 1
+                if data_index < len(binary_data):
+                    b = (b & 0xFE) | int(binary_data[data_index])
+                    data_index += 1
+                    
+                new_pixels.append((r, g, b))
+            else:
+                new_pixels.append(pixel)
+                
+        new_image = Image.new('RGB', image.size)
+        new_image.putdata(new_pixels)
+        return new_image
+        
+    except Exception:
+        return None
+
+
+def reveal_data_from_image(image):
+    """
+    Révèle les données cachées dans une image
+    """
+    try:
+        pixels = list(image.getdata())
+        binary_data = ""
+        
+        for pixel in pixels:
+            r, g, b = pixel
+            binary_data += str(r & 1)
+            binary_data += str(g & 1)
+            binary_data += str(b & 1)
+            
+        # Chercher le délimiteur
+        delimiter = '1111111111111110'
+        end_index = binary_data.find(delimiter)
+        
+        if end_index == -1:
+            return None
+            
+        # Extraire les données utiles
+        data_binary = binary_data[:end_index]
+        
+        # Convertir en bytes
+        data_bytes = bytearray()
+        for i in range(0, len(data_binary), 8):
+            if i + 8 <= len(data_binary):
+                byte = data_binary[i:i+8]
+                data_bytes.append(int(byte, 2))
+                
+        return bytes(data_bytes)
+        
+    except Exception:
+        return None
+
+
+# ─────────────────────────────── VUES POUR STÉGANOGRAPHIE AVANCÉE ───────────────────────────────
 
 from django import forms
 
@@ -806,23 +531,32 @@ class ImageUploadForm(forms.Form):
         label="Image",
         widget=forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'})
     )
-    
+
 class EncryptForm(ImageUploadForm):
     message = forms.CharField(
         label="Message",
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Entrez votre message secret...'})
+        widget=forms.Textarea(attrs={
+            'class': 'form-control', 
+            'rows': 4, 
+            'placeholder': 'Entrez votre message secret...'
+        })
     )
     password = forms.CharField(
         label="Mot de passe",
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Mot de passe pour chiffrer'})
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Mot de passe pour chiffrer'
+        })
     )
 
 class DecryptForm(ImageUploadForm):
     password = forms.CharField(
         label="Mot de passe",
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Mot de passe pour déchiffrer'})
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'Mot de passe pour déchiffrer'
+        })
     )
-
 
 
 class EncryptView(LoginRequiredMixin, FormView):
@@ -836,35 +570,27 @@ class EncryptView(LoginRequiredMixin, FormView):
         password = form.cleaned_data['password']
         
         try:
-            # Open and process the image
             img = Image.open(image_file)
-            img_format = img.format if img.format else 'PNG'
             
-            # Ensure image is in RGB for LSB
             if img.mode != 'RGB':
                 img = img.convert('RGB')
                 
-            # Encrypt the message
             encrypted_data = encrypt_message(message, password)
             if not encrypted_data:
                 form.add_error(None, "Échec du chiffrement.")
                 return self.form_invalid(form)
                 
-            # Hide encrypted data in the image
             stego_image = hide_data_in_image(img, encrypted_data)
             if not stego_image:
-                form.add_error(None, "Échec de la dissimulation des données dans l'image. Les données sont peut-être trop volumineuses pour cette image.")
+                form.add_error(None, "Données trop volumineuses pour cette image.")
                 return self.form_invalid(form)
                 
-            # Prepare image for download
             output_buffer = io.BytesIO()
             stego_image.save(output_buffer, format='PNG')
             output_buffer.seek(0)
             
-            # Create response with the image
             response = HttpResponse(output_buffer.getvalue(), content_type='image/png')
             response['Content-Disposition'] = 'attachment; filename="stego_image.png"'
-            
             return response
             
         except Exception as e:
@@ -876,6 +602,7 @@ class EncryptView(LoginRequiredMixin, FormView):
         context['user'] = self.request.user
         return context
 
+
 class DecryptView(LoginRequiredMixin, FormView):
     template_name = 'core/decrypt.html'
     form_class = DecryptForm
@@ -886,26 +613,21 @@ class DecryptView(LoginRequiredMixin, FormView):
         password = form.cleaned_data['password']
         
         try:
-            # Open and process the image
             img = Image.open(image_file)
             
-            # Ensure image is in RGB for LSB
             if img.mode != 'RGB':
                 img = img.convert('RGB')
                 
-            # Reveal data from the image
             revealed_data = reveal_data_from_image(img)
             if not revealed_data:
-                form.add_error(None, "Échec de la révélation des données de l'image. Aucun message caché trouvé ou délimiteur manquant.")
+                form.add_error(None, "Aucun message caché trouvé.")
                 return self.form_invalid(form)
                 
-            # Decrypt the revealed data
             decrypted_message = decrypt_message(revealed_data, password)
             if decrypted_message is None:
-                form.add_error(None, "Échec du déchiffrement. Mot de passe incorrect ou données corrompues.")
+                form.add_error(None, "Mot de passe incorrect.")
                 return self.form_invalid(form)
                 
-            # Return the same page with the decrypted message
             context = self.get_context_data(form=form)
             context['decrypted_message'] = decrypted_message
             return self.render_to_response(context)
@@ -918,9 +640,3 @@ class DecryptView(LoginRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         context['user'] = self.request.user
         return context
-
-
-
-
-
-

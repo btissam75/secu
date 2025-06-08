@@ -27,6 +27,11 @@ from django import forms
 from django import forms
 from django.contrib.auth import get_user_model
 
+# watermark/forms.py
+
+from django import forms
+from django.contrib.auth import get_user_model
+
 User = get_user_model()
 
 class RegisterForm(forms.Form):
@@ -55,8 +60,6 @@ class RegisterForm(forms.Form):
             raise forms.ValidationError("Les mots de passe ne correspondent pas.")
         return cleaned_data
 
-
-User = settings.AUTH_USER_MODEL
 
 # class MessageForm(forms.ModelForm):
 #     recipient = forms.ModelChoiceField(

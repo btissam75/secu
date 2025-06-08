@@ -13,6 +13,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
+
 from .models import DecryptedDocument
 
 from .models import Document, SecureFile
@@ -141,7 +142,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 # watermark/views.py
 
-from django.contrib.auth import get_user_model, authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -154,43 +155,95 @@ from .forms  import RegisterForm
 from .utils.crypto_utils  import encrypt_bytes, decrypt_bytes
 from .utils.stego_utils   import embed_bytes_in_image, extract_bytes_from_image
 
-User = get_user_model()  # Si vous avez un AUTH_USER_MODEL personnalisé,
+
                         # sinon, get_user_model() renverra django.contrib.auth.models.User
 
+# watermark/views.py
+
+from django.shortcuts           import render, redirect
+from django.contrib.auth        import authenticate, login
+from django.contrib             import messages
+from django.contrib.auth.models import User
+from .forms                     import RegisterForm
+from .models                    import Profile
+
+# def register(request):
+   
+#     # 2) Instanciation unique du formulaire
+#     form = RegisterForm(request.POST or None)
+
+#     # 3) Si le formulaire est valide, on traite
+#     if form.is_valid():
+#         username = form.cleaned_data['username']
+#         email    = form.cleaned_data['email']
+#         pwd      = form.cleaned_data['password1']
+
+#         # 4) Vérification existence (username OU email)
+#         if User.objects.filter(username__iexact=username).exists() \
+#         or User.objects.filter(email__iexact=email).exists():
+#             messages.info(request, 
+#                 "Ce compte existe déjà – merci de vous connecter.")
+#             return redirect('login')
+
+#         # 5) Création de l'utilisateur
+#         user = User.objects.create_user(
+#             username=username,
+#             email=email,
+#             password=pwd
+#         )
+#         # 6) Création du profil (si vous n'utilisez pas de signal automatique)
+#         Profile.objects.create(user=user)
+
+#         # 7) Connexion automatique
+#         user = authenticate(request, username=username, password=pwd)
+#         if user:
+#             login(request, user)
+
+#         messages.success(request, "Votre compte a bien été créé.")
+#         return redirect('login')
+
+#     # 8) En GET ou en cas d’erreurs, on ré-affiche le formulaire
+#     return render(request, 'watermark/register.html', {
+#         'form': form
+#     })
+
+from django.shortcuts    import render, redirect
+from django.contrib      import messages
+from django.contrib.auth import get_user_model
+from .forms              import RegisterForm
+from django.db           import IntegrityError
+
+User = get_user_model()
+
 def register(request):
+    
+
+    form = RegisterForm(request.POST or None)
+
     if request.method == 'POST':
-        form = RegisterForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data['username']
             email    = form.cleaned_data['email']
             pwd1     = form.cleaned_data['password1']
 
-            # Vérifier qu’aucun utilisateur n’existe déjà
-            if User.objects.filter(username=username).exists():
-                messages.error(request, "Ce nom d’utilisateur est déjà pris.")
-            elif User.objects.filter(email=email).exists():
-                messages.error(request, "Cette adresse email est déjà utilisée.")
-            else:
-                user = User.objects.create_user(
-                    username=username,
-                    email=email,
-                    password=pwd1
-                )
-                Profile.objects.create(user=user)
-
-                user = authenticate(request, username=username, password=pwd1)
-                if user is not None:
-                    login(request, user)
-
-                messages.success(request, "Votre compte a bien été créé.")
+            # 2) Si compte déjà existant, on redirige vers login avec info
+            if User.objects.filter(username=username).exists() or User.objects.filter(email=email).exists():
+                messages.info(request, "Un compte existe déjà pour cet utilisateur/email. Vous pouvez vous connecter.")
                 return redirect('login')
 
-    else:
-        form = RegisterForm()
+            # 3) Sinon on crée le user
+            try:
+                user = User.objects.create_user(username=username, email=email, password=pwd1)
+            except IntegrityError:
+                # au cas (rare) où le profil aurait déjà été créé par un signal
+                messages.info(request, "Votre compte semble déjà exister. Merci de vous connecter.")
+                return redirect('login')
 
-    return render(request, 'register.html', {'form': form})
+            messages.success(request, "Votre compte a bien été créé. Vous pouvez maintenant vous connecter.")
+            return redirect('login')
 
-
+    # GET ou form invalide : on ré-affiche le formulaire
+    return render(request, 'watermark/register.html', {'form': form})
 
 
 
@@ -771,7 +824,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 
-User = settings.AUTH_USER_MODEL
+
 
 class Message(models.Model):
     sender    = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
